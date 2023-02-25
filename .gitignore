@@ -1,0 +1,15 @@
+*.class
+bin/
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+.classpath
+.project
+.settings/
+.idea/
+*.iml
+target/
