@@ -27,7 +27,9 @@ public class Config {
     public boolean allowFallback = true;
 
     public static void load() throws IOException {
+        Logger.log("Loading config.json", Logger.DEBUG);
         if(!FILE.exists()) {
+            Logger.log("Creating missing config.json at %s", Logger.DEBUG, FILE.getAbsolutePath());
             Config.instance.write();
         } else {
             String json = Files.readString(FILE.toPath(), StandardCharsets.UTF_8);

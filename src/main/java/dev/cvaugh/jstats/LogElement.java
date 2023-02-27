@@ -1,7 +1,5 @@
 package dev.cvaugh.jstats;
 
-import java.util.regex.Pattern;
-
 public enum LogElement {
     CLIENT_IP("%a", "\\\\S+"), UNDERLYING_PEER_IP("%{c}a", "\\\\S+"), LOCAL_IP("%A", "\\\\S+"),
     SIZE_OF_RESPONSE("%B", "[0-9]+"), SIZE_OF_RESPONSE_CLF("%b", "[0-9]+|-"),

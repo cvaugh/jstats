@@ -10,9 +10,9 @@ public class Main {
         try {
             Config.load();
         } catch(IOException e) {
-            System.err.println(
-                    "Failed to load configuration file from " + Config.FILE.getAbsolutePath());
-            e.printStackTrace();
+            Logger.log("Failed to load configuration file from %s", Logger.ERROR,
+                    Config.FILE.getAbsolutePath());
+            Logger.log(e, Logger.ERROR);
             System.exit(1);
         }
         File logFile =
