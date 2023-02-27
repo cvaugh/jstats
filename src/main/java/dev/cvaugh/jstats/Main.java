@@ -1,6 +1,8 @@
 package dev.cvaugh.jstats;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 public class Main {
 
@@ -13,6 +15,12 @@ public class Main {
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.println(Config.instance);
+        File logFile =
+                new File(Config.instance.getAccessLogDirectory(), Config.instance.accessLogName);
+        try {
+            Utils.parseLog(Files.readAllLines(logFile.toPath()));
+        } catch(IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

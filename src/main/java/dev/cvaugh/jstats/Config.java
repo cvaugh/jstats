@@ -24,6 +24,7 @@ public class Config {
     public String whoisTool = "https://iplocation.io/ip/{{address}}";
     public boolean ignoreInternalLogs = true;
     public boolean notifyOnMalformed = false;
+    public boolean allowFallback = true;
 
     public static void load() throws IOException {
         if(!FILE.exists()) {
@@ -43,10 +44,12 @@ public class Config {
     }
 
     public File getAccessLogDirectory() {
-        return new File(Utils.replaceTildeInPath(accessLogDirectory));
+        // return new File(Utils.replaceTildeInPath(accessLogDirectory));
+        return new File("logs"); // XXX FOR TESTING ONLY
     }
 
     public File getOutputFile() {
-        return new File(Utils.replaceTildeInPath(outputFilePath));
+        // return new File(Utils.replaceTildeInPath(outputFilePath));
+        return new File("out.html"); // XXX FOR TESTING ONLY
     }
 }
