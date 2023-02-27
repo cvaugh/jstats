@@ -18,19 +18,16 @@ public enum LogElement {
     USER_AGENT("%{User-Agent}i", ".*");
 
     final String format;
+    final String groupName;
     final String regex;
 
     LogElement(String format, String regex) {
         this.format = format;
+        this.groupName = name().toLowerCase().replaceAll("_", "");
         this.regex = regex;
     }
 
-    public static String createRegex(String logFormat) {
-        for(LogElement e : values()) {
-            logFormat = logFormat.replaceAll(Pattern.quote(e.format),
-                    String.format("(?<%s>%s)", e.name().toLowerCase().replaceAll("_", ""),
-                            e.regex));
-        }
-        return "^" + logFormat + "$";
+    public String toString() {
+        return format;
     }
 }
