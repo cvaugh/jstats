@@ -2,6 +2,7 @@ package dev.cvaugh.jstats;
 
 import com.google.gson.Gson;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -14,19 +15,22 @@ public class Utils {
             createFormatRegex("%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\""));
     private static Pattern logPattern;
 
-    public static void parseLog(List<String> lines) {
+    public static List<LogEntry> parseLog(List<String> lines) {
         logPattern = Pattern.compile(createFormatRegex(Config.instance.logFormat));
+        List<LogEntry> entries = new ArrayList<>();
         for(String line : lines) {
-            Map<LogElement, String> values = parseLogLine(line);
-            if(values == null) {
-                // TODO print error message
-                continue;
+            LogEntry entry = parseLogLine(line);
+            if(entry == null) {
+                Logger.log("Unable to parse line", Logger.WARN);
+                Logger.log(line, Logger.DEBUG);
+            } else {
+                entries.add(entry);
             }
-            // TODO
         }
+        return entries;
     }
 
-    public static Map<LogElement, String> parseLogLine(String line) {
+    public static LogEntry parseLogLine(String line) {
         Matcher matcher = logPattern.matcher(line);
         if(!matcher.find()) {
             if(Config.instance.allowFallback) {
@@ -44,7 +48,7 @@ public class Utils {
                 values.put(e, matcher.group(e.groupName));
             } catch(IllegalArgumentException ignore) {}
         }
-        return values;
+        return new LogEntry(values);
     }
 
     public static String replaceTildeInPath(String path) {

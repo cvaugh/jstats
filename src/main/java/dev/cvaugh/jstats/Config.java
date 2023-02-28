@@ -7,11 +7,15 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 public class Config {
     public static final File FILE = new File("config.json");
     private static final Gson PRETTY_GSON = new GsonBuilder().setPrettyPrinting().create();
     public static Config instance = new Config();
+    private static DateFormat inputDF;
+    private static DateFormat outputDF;
 
     public String accessLogDirectory = "/var/log/apache2";
     public String accessLogName = "access.log";
@@ -19,8 +23,8 @@ public class Config {
     public String logFormat =
             "%v:%p %h %l %u %t \"%r\" %s:%>s %I %O \"%{Referer}i\" \"%{User-Agent}i\" %D %k %f \"%U\" \"%q\"";
     public String outputFilePath = "~/simplestats.html";
-    public String inputDateFormat = "%d/%b/%Y:%H:%M:%S %z";
-    public String outputDateFormat = "%e %b %Y %I:%M:%S %p";
+    public String inputDateFormat = "dd/MMM/yyyy:HH:mm:ss Z";
+    public String outputDateFormat = "yyyy-MM-dd HH:mm:ss zzz";
     public String whoisTool = "https://iplocation.io/ip/{{address}}";
     public boolean ignoreInternalLogs = true;
     public boolean notifyOnMalformed = false;
@@ -35,6 +39,8 @@ public class Config {
             String json = Files.readString(FILE.toPath(), StandardCharsets.UTF_8);
             Config.instance = Utils.GSON.fromJson(json, Config.class);
         }
+        inputDF = new SimpleDateFormat(instance.inputDateFormat);
+        outputDF = new SimpleDateFormat(instance.outputDateFormat);
     }
 
     public void write() throws IOException {
@@ -45,13 +51,21 @@ public class Config {
         return PRETTY_GSON.toJson(this);
     }
 
-    public File getAccessLogDirectory() {
-        // return new File(Utils.replaceTildeInPath(accessLogDirectory));
+    public static File getAccessLogDirectory() {
+        // return new File(Utils.replaceTildeInPath(instance.accessLogDirectory));
         return new File("logs"); // XXX FOR TESTING ONLY
     }
 
-    public File getOutputFile() {
-        // return new File(Utils.replaceTildeInPath(outputFilePath));
+    public static File getOutputFile() {
+        // return new File(Utils.replaceTildeInPath(instance.outputFilePath));
         return new File("out.html"); // XXX FOR TESTING ONLY
+    }
+
+    public static DateFormat getInputDateFormat() {
+        return inputDF;
+    }
+
+    public static DateFormat getOutputDateFormat() {
+        return outputDF;
     }
 }

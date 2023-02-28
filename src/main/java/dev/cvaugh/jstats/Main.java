@@ -3,6 +3,7 @@ package dev.cvaugh.jstats;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 public class Main {
 
@@ -15,12 +16,19 @@ public class Main {
             Logger.log(e, Logger.ERROR);
             System.exit(1);
         }
-        File logFile =
-                new File(Config.instance.getAccessLogDirectory(), Config.instance.accessLogName);
+        File logFile = new File(Config.getAccessLogDirectory(), Config.instance.accessLogName);
+        Logger.log("Reading logs", Logger.DEBUG);
+        List<LogEntry> entries = null;
         try {
-            Utils.parseLog(Files.readAllLines(logFile.toPath()));
+            entries = Utils.parseLog(Files.readAllLines(logFile.toPath()));
         } catch(IOException e) {
-            throw new RuntimeException(e);
+            Logger.log("Failed to parse log: %s", Logger.ERROR, logFile.getAbsolutePath());
+            Logger.log(e, Logger.ERROR);
+            System.exit(1);
+        }
+        Logger.log("Processing log entries", Logger.DEBUG);
+        for(LogEntry entry : entries) {
+            entry.process();
         }
     }
 }
