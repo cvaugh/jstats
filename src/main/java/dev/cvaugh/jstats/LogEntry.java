@@ -4,7 +4,7 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.Map;
 
-public class LogEntry {
+public class LogEntry implements Comparable<LogEntry> {
     public Map<LogElement, String> elements;
 
     public String clientIP = null;
@@ -233,5 +233,10 @@ public class LogEntry {
     public String toString() {
         return String.format("<LogEntry with %d element%s>", elements.size(),
                 elements.size() == 1 ? "" : "s");
+    }
+
+    @Override
+    public int compareTo(LogEntry e) {
+        return Long.compare(time, e.time);
     }
 }

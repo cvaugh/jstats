@@ -26,9 +26,8 @@ public class Config {
     public String inputDateFormat = "dd/MMM/yyyy:HH:mm:ss Z";
     public String outputDateFormat = "yyyy-MM-dd HH:mm:ss zzz";
     public String whoisTool = "https://iplocation.io/ip/{{address}}";
+    public boolean printMalformedEntries = false;
     public boolean ignoreInternalLogs = true;
-    public boolean notifyOnMalformed = false;
-    public boolean allowFallback = true;
 
     public static void load() throws IOException {
         Logger.log("Loading config.json", Logger.DEBUG);
