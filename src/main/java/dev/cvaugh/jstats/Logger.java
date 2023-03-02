@@ -10,14 +10,12 @@ public class Logger {
     public static final int ERROR = 3;
     public static final int NONE = 4;
 
-    public static int logLevel = DEBUG;
-
     private static void log(String s, String prefix, PrintStream stream) {
         stream.printf("[%s] %s\n", prefix, s);
     }
 
     public static void log(String s, int level) {
-        if(level == NONE || level < logLevel)
+        if(level == NONE || level < Config.instance.logVerbosity)
             return;
         switch(level) {
         case DEBUG -> log(s, "DEBUG", System.out);
@@ -29,7 +27,7 @@ public class Logger {
     }
 
     public static void log(String s, int level, Object... format) {
-        if(level == NONE || level < logLevel)
+        if(level == NONE || level < Config.instance.logVerbosity)
             return;
         log(String.format(s, format), level);
     }

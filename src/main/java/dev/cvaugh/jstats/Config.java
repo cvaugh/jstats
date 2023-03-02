@@ -35,9 +35,9 @@ public class Config {
     public int fileRequestCountThreshold = 0;
     public int queryRequestCountThreshold = 0;
     public int refererRequestCountThreshold = 0;
+    public int logVerbosity = 1;
 
     public static void load() throws IOException {
-        Logger.log("Loading config.json", Logger.DEBUG);
         if(!FILE.exists()) {
             Logger.log("Creating missing config.json at %s", Logger.WARN, FILE.getAbsolutePath());
             Config.instance.write();
@@ -45,6 +45,10 @@ public class Config {
         } else {
             String json = Files.readString(FILE.toPath(), StandardCharsets.UTF_8);
             Config.instance = Utils.GSON.fromJson(json, Config.class);
+        }
+        if(instance.logVerbosity < 0 || instance.logVerbosity > 4) {
+            System.err.println("[ERROR] logVerbosity must be between 0 and 4 (inclusive)");
+            System.exit(1);
         }
         if(instance.timeTakenBuckets.length == 0) {
             Logger.log("timeTakenBuckets must have at least one entry", Logger.ERROR);
