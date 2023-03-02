@@ -52,7 +52,7 @@ tr:nth-child(odd) td {
   background-color: rgba(34, 34, 34, 0.07);
 }
 
-td.jstats-user-agent, td.jstats-page-url, td.jstats-referer {
+td.left {
   text-align: left;
 }
 
@@ -77,6 +77,10 @@ table.full-log tr th, table.full-log tr td {
 .truncated {
     text-decoration: underline dotted #424242;
 }
+
+.truncation-marker {
+    color: #B71C1C;
+}
     </style>
   </head>
   <body>
@@ -97,7 +101,6 @@ table.full-log tr th, table.full-log tr td {
 {{user_agent_table}}
 <br>
 <h2>Requests</h2>
-{{pages_table}}
 {{files_table}}
 {{queries_table}}
 {{referers_table}}

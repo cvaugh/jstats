@@ -28,6 +28,7 @@ public class Config {
     public String whoisTool = "https://iplocation.io/ip/{{address}}";
     public boolean printMalformedEntries = false;
     public boolean ignoreInternalLogs = true;
+    public int truncateWideColumns = 100;
 
     public static void load() throws IOException {
         Logger.log("Loading config.json", Logger.DEBUG);

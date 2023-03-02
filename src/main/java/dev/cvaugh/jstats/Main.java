@@ -15,8 +15,14 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 public class Main {
-    private static final String REFERERS_ROW =
-            "<tr><td class=\"jstats-referer\">%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
+    private static final String TRUNCATED_CELL =
+            "<span class=\"truncated\" title=\"%s\">%s<span class=\"truncation-marker\">&raquo;</span></span>";
+    private static final String LEFT_ALIGN_ROW =
+            "<tr><td class=\"left\">%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
+    private static final String PAGES_ROW =
+            "<tr><td>%s</td><td>%s</td><td class=\"left\">%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
+    private static final String FILES_ROW =
+            "<tr><td class=\"left\">%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
     private static final String RESPONSES_ROW =
             "<tr><td>%d</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
     private static final String TIME_TAKEN_ROW = "<tr><td>%s%s%s</td><td>%d</td><td>%s</td></tr>\n";
@@ -94,7 +100,7 @@ public class Main {
                 System.exit(1);
             }
         }
-        // todo: remove unavailable sections
+        // TODO remove unavailable sections
         Logger.log("Writing %s to %s", Logger.INFO,
                 Utils.humanReadableSize(template.getBytes(StandardCharsets.UTF_8).length),
                 Config.getOutputFile().getAbsolutePath());
@@ -128,6 +134,7 @@ public class Main {
                             Utils.humanReadableSize(
                                     entries.stream().mapToLong(e -> e.bytesSent).sum()));
         }
+        // TODO handle empty or "-" values
         case YEARLY_TABLE -> {}
         case MONTHLY_TABLE -> {}
         case DAY_OF_MONTH_TABLE -> {}
@@ -136,9 +143,58 @@ public class Main {
         case IP_TABLE -> {}
         case USERS_TABLE -> {}
         case USER_AGENT_TABLE -> {}
-        case PAGES_TABLE -> {}
-        case FILES_TABLE -> {}
-        case QUERIES_TABLE -> {}
+        case FILES_TABLE -> {
+            Map<String, Integer> counts = new HashMap<>();
+            Map<String, Long> sizes = new HashMap<>();
+            Map<String, Long> latestVisits = new HashMap<>();
+            long total = 0;
+            for(LogEntry entry : entries) {
+                counts.put(entry.filename, counts.getOrDefault(entry.filename, 0) + 1);
+                sizes.put(entry.filename, sizes.getOrDefault(entry.filename, 0L) + entry.bytesSent);
+                total += entry.bytesSent;
+                if(entry.time > latestVisits.getOrDefault(entry.filename, 0L)) {
+                    latestVisits.put(entry.filename, entry.time);
+                }
+            }
+            counts = Utils.sortByValue(counts);
+            StringBuilder sb = new StringBuilder();
+            for(String filename : counts.keySet()) {
+                sb.append(String.format(FILES_ROW,
+                        filename.length() > Config.instance.truncateWideColumns ?
+                                String.format(TRUNCATED_CELL, filename, filename.substring(0,
+                                        Config.instance.truncateWideColumns)) :
+                                filename, counts.get(filename),
+                        Utils.formatPercent(counts.get(filename), entries.size()),
+                        Utils.humanReadableSize(sizes.get(filename)),
+                        Utils.formatPercent(sizes.get(filename), total),
+                        Utils.humanReadableSize(sizes.get(filename) / counts.get(filename)),
+                        Config.getOutputDateFormat().format(latestVisits.get(filename))));
+            }
+            return template.replace("{{rows}}", sb.toString());
+        }
+        case QUERIES_TABLE -> {
+            Map<String, Integer> counts = new HashMap<>();
+            Map<String, Long> sizes = new HashMap<>();
+            long total = 0;
+            for(LogEntry entry : entries) {
+                counts.put(entry.query, counts.getOrDefault(entry.query, 0) + 1);
+                sizes.put(entry.query, sizes.getOrDefault(entry.query, 0L) + entry.bytesSent);
+                total += entry.bytesSent;
+            }
+            counts = Utils.sortByValue(counts);
+            StringBuilder sb = new StringBuilder();
+            for(String query : counts.keySet()) {
+                sb.append(String.format(LEFT_ALIGN_ROW,
+                        query.length() > Config.instance.truncateWideColumns ?
+                                String.format(TRUNCATED_CELL, query,
+                                        query.substring(0, Config.instance.truncateWideColumns)) :
+                                query, counts.get(query),
+                        Utils.formatPercent(counts.get(query), entries.size()),
+                        Utils.humanReadableSize(sizes.get(query)),
+                        Utils.formatPercent(sizes.get(query), total)));
+            }
+            return template.replace("{{rows}}", sb.toString());
+        }
         case REFERERS_TABLE -> {
             Map<String, Integer> counts = new HashMap<>();
             Map<String, Long> sizes = new HashMap<>();
@@ -151,7 +207,11 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String referer : counts.keySet()) {
-                sb.append(String.format(REFERERS_ROW, referer, counts.get(referer),
+                sb.append(String.format(LEFT_ALIGN_ROW,
+                        referer.length() > Config.instance.truncateWideColumns ?
+                                String.format(TRUNCATED_CELL, referer,
+                                        referer.substring(0, Config.instance.truncateWideColumns)) :
+                                referer, counts.get(referer),
                         Utils.formatPercent(counts.get(referer), entries.size()),
                         Utils.humanReadableSize(sizes.get(referer)),
                         Utils.formatPercent(sizes.get(referer), total)));

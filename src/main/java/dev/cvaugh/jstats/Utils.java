@@ -24,7 +24,7 @@ import java.util.zip.GZIPInputStream;
 public class Utils {
     public static final Gson GSON = new Gson();
     public static final int[] TIME_TAKEN_BUCKETS = new int[] { 100, 500, 1000, 5000, 10000, 50000 };
-    private static final DecimalFormat BYTES_FORMAT = new DecimalFormat("#.00");
+    private static final DecimalFormat BYTES_FORMAT = new DecimalFormat("#.##");
     private static final DecimalFormat PERCENT_FORMAT = new DecimalFormat("0.00%");
     private static Pattern logPattern;
 

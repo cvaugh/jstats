@@ -15,11 +15,11 @@ public enum OutputSection {
     IP_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.REMOTE_HOSTNAME),
     USERS_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.REMOTE_USER),
     USER_AGENT_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.USER_AGENT),
-    PAGES_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.SERVER_NAME),
     FILES_TABLE(LogElement.TIME, LogElement.FILENAME, LogElement.BYTES_SENT),
     QUERIES_TABLE(LogElement.QUERY), REFERERS_TABLE(LogElement.REFERER),
     RESPONSES_TABLE(LogElement.STATUS_FINAL, LogElement.BYTES_SENT),
     TIME_TAKEN_TABLE(LogElement.TIME_TO_SERVE_US), FOOTER;
+    // TODO protocols, servers, PID, request method, local IP
 
     private final List<LogElement> requiredElements = new ArrayList<>();
 
