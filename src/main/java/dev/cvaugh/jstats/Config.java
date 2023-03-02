@@ -29,7 +29,11 @@ public class Config {
     public boolean printMalformedEntries = false;
     public boolean ignoreInternalLogs = true;
     public int truncateWideColumns = 100;
-    public int ipRequestCountThreshold = 4;
+    public int ipRequestCountThreshold = 5;
+    public int userAgentRequestCountThreshold = 3;
+    public int fileRequestCountThreshold = 0;
+    public int queryRequestCountThreshold = 0;
+    public int refererRequestCountThreshold = 0;
 
     public static void load() throws IOException {
         Logger.log("Loading config.json", Logger.DEBUG);

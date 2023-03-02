@@ -267,6 +267,8 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String ip : counts.keySet()) {
+                if(counts.get(ip) < Config.instance.ipRequestCountThreshold)
+                    continue;
                 sb.append(String.format(IP_ROW, ip.length() > Config.instance.truncateWideColumns ?
                                 String.format(TRUNCATED_CELL, ip,
                                         ip.substring(0, Config.instance.truncateWideColumns)) :
@@ -327,6 +329,8 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String userAgent : counts.keySet()) {
+                if(counts.get(userAgent) < Config.instance.userAgentRequestCountThreshold)
+                    continue;
                 sb.append(String.format(USER_AGENTS_ROW,
                         userAgent.length() > Config.instance.truncateWideColumns ?
                                 String.format(TRUNCATED_CELL, userAgent, userAgent.substring(0,
@@ -357,6 +361,8 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String filename : counts.keySet()) {
+                if(counts.get(filename) < Config.instance.fileRequestCountThreshold)
+                    continue;
                 sb.append(String.format(FILES_ROW,
                         filename.length() > Config.instance.truncateWideColumns ?
                                 String.format(TRUNCATED_CELL, filename, filename.substring(0,
@@ -382,6 +388,8 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String query : counts.keySet()) {
+                if(counts.get(query) < Config.instance.queryRequestCountThreshold)
+                    continue;
                 sb.append(String.format(QUERIES_ROW,
                         query.length() > Config.instance.truncateWideColumns ?
                                 String.format(TRUNCATED_CELL, query,
@@ -405,6 +413,8 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String referer : counts.keySet()) {
+                if(counts.get(referer) < Config.instance.refererRequestCountThreshold)
+                    continue;
                 sb.append(String.format(QUERIES_ROW,
                         referer.length() > Config.instance.truncateWideColumns ?
                                 String.format(TRUNCATED_CELL, referer,
