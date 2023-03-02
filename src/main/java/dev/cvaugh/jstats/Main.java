@@ -17,12 +17,16 @@ import java.util.regex.Pattern;
 public class Main {
     private static final String TRUNCATED_CELL =
             "<span class=\"truncated\" title=\"%s\">%s<span class=\"truncation-marker\">&raquo;</span></span>";
-    private static final String LEFT_ALIGN_ROW =
-            "<tr><td class=\"left\">%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
-    private static final String PAGES_ROW =
-            "<tr><td>%s</td><td>%s</td><td class=\"left\">%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
+    private static final String USERS_ROW =
+            "<tr><td class=\"left\">%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
+    private static final String IP_ROW =
+            "<tr><td class=\"left\">%s</td><td><a href=\"%s\">View</a></td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
+    private static final String USER_AGENTS_ROW =
+            "<tr><td class=\"left\">%s</td><td>%d</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
     private static final String FILES_ROW =
             "<tr><td class=\"left\">%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
+    private static final String QUERIES_ROW =
+            "<tr><td class=\"left\">%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
     private static final String RESPONSES_ROW =
             "<tr><td>%d</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
     private static final String TIME_TAKEN_ROW = "<tr><td>%s%s%s</td><td>%d</td><td>%s</td></tr>\n";
@@ -140,9 +144,95 @@ public class Main {
         case DAY_OF_MONTH_TABLE -> {}
         case DAY_OF_WEEK_TABLE -> {}
         case HOURLY_TABLE -> {}
-        case IP_TABLE -> {}
-        case USERS_TABLE -> {}
-        case USER_AGENT_TABLE -> {}
+        case IP_TABLE -> {
+            Map<String, Integer> counts = new HashMap<>();
+            Map<String, Long> sizes = new HashMap<>();
+            Map<String, Long> latestVisits = new HashMap<>();
+            long total = 0;
+            for(LogEntry entry : entries) {
+                counts.put(entry.remoteHostname, counts.getOrDefault(entry.remoteHostname, 0) + 1);
+                sizes.put(entry.remoteHostname,
+                        sizes.getOrDefault(entry.remoteHostname, 0L) + entry.bytesSent);
+                total += entry.bytesSent;
+                if(entry.time > latestVisits.getOrDefault(entry.remoteHostname, 0L)) {
+                    latestVisits.put(entry.remoteHostname, entry.time);
+                }
+            }
+            counts = Utils.sortByValue(counts);
+            StringBuilder sb = new StringBuilder();
+            for(String ip : counts.keySet()) {
+                sb.append(String.format(IP_ROW, ip.length() > Config.instance.truncateWideColumns ?
+                                String.format(TRUNCATED_CELL, ip,
+                                        ip.substring(0, Config.instance.truncateWideColumns)) :
+                                ip, Config.instance.whoisTool.replace("{{address}}", ip), counts.get(ip),
+                        Utils.formatPercent(counts.get(ip), entries.size()),
+                        Utils.humanReadableSize(sizes.get(ip)),
+                        Utils.formatPercent(sizes.get(ip), total),
+                        Config.getOutputDateFormat().format(latestVisits.get(ip))));
+            }
+            return template.replace("{{rows}}", sb.toString());
+        }
+        case USERS_TABLE -> {
+            Map<String, Integer> counts = new HashMap<>();
+            Map<String, Long> sizes = new HashMap<>();
+            Map<String, Long> latestVisits = new HashMap<>();
+            long total = 0;
+            for(LogEntry entry : entries) {
+                counts.put(entry.remoteUser, counts.getOrDefault(entry.remoteUser, 0) + 1);
+                sizes.put(entry.remoteUser,
+                        sizes.getOrDefault(entry.remoteUser, 0L) + entry.bytesSent);
+                total += entry.bytesSent;
+                if(entry.time > latestVisits.getOrDefault(entry.remoteUser, 0L)) {
+                    latestVisits.put(entry.remoteUser, entry.time);
+                }
+            }
+            counts = Utils.sortByValue(counts);
+            StringBuilder sb = new StringBuilder();
+            for(String user : counts.keySet()) {
+                sb.append(String.format(USERS_ROW,
+                        user.length() > Config.instance.truncateWideColumns ?
+                                String.format(TRUNCATED_CELL, user,
+                                        user.substring(0, Config.instance.truncateWideColumns)) :
+                                user, counts.get(user),
+                        Utils.formatPercent(counts.get(user), entries.size()),
+                        Utils.humanReadableSize(sizes.get(user)),
+                        Utils.formatPercent(sizes.get(user), total),
+                        Config.getOutputDateFormat().format(latestVisits.get(user))));
+            }
+            return template.replace("{{rows}}", sb.toString());
+        }
+        case USER_AGENT_TABLE -> {
+            Map<String, Integer> counts = new HashMap<>();
+            Map<String, Long> sizes = new HashMap<>();
+            Map<String, Long> latestVisits = new HashMap<>();
+            Map<String, HashSet<String>> unique = new HashMap<>();
+            long total = 0;
+            for(LogEntry entry : entries) {
+                counts.put(entry.userAgent, counts.getOrDefault(entry.userAgent, 0) + 1);
+                sizes.put(entry.userAgent,
+                        sizes.getOrDefault(entry.userAgent, 0L) + entry.bytesSent);
+                total += entry.bytesSent;
+                if(entry.time > latestVisits.getOrDefault(entry.userAgent, 0L)) {
+                    latestVisits.put(entry.userAgent, entry.time);
+                }
+                unique.computeIfAbsent(entry.userAgent, k -> new HashSet<>());
+                unique.get(entry.userAgent).add(entry.remoteHostname);
+            }
+            counts = Utils.sortByValue(counts);
+            StringBuilder sb = new StringBuilder();
+            for(String userAgent : counts.keySet()) {
+                sb.append(String.format(USER_AGENTS_ROW,
+                        userAgent.length() > Config.instance.truncateWideColumns ?
+                                String.format(TRUNCATED_CELL, userAgent, userAgent.substring(0,
+                                        Config.instance.truncateWideColumns)) :
+                                userAgent, unique.get(userAgent).size(), counts.get(userAgent),
+                        Utils.formatPercent(counts.get(userAgent), entries.size()),
+                        Utils.humanReadableSize(sizes.get(userAgent)),
+                        Utils.formatPercent(sizes.get(userAgent), total),
+                        Config.getOutputDateFormat().format(latestVisits.get(userAgent))));
+            }
+            return template.replace("{{rows}}", sb.toString());
+        }
         case FILES_TABLE -> {
             Map<String, Integer> counts = new HashMap<>();
             Map<String, Long> sizes = new HashMap<>();
@@ -184,7 +274,7 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String query : counts.keySet()) {
-                sb.append(String.format(LEFT_ALIGN_ROW,
+                sb.append(String.format(QUERIES_ROW,
                         query.length() > Config.instance.truncateWideColumns ?
                                 String.format(TRUNCATED_CELL, query,
                                         query.substring(0, Config.instance.truncateWideColumns)) :
@@ -207,7 +297,7 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String referer : counts.keySet()) {
-                sb.append(String.format(LEFT_ALIGN_ROW,
+                sb.append(String.format(QUERIES_ROW,
                         referer.length() > Config.instance.truncateWideColumns ?
                                 String.format(TRUNCATED_CELL, referer,
                                         referer.substring(0, Config.instance.truncateWideColumns)) :
