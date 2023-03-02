@@ -10,7 +10,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -24,6 +26,15 @@ import java.util.zip.GZIPInputStream;
 public class Utils {
     public static final Gson GSON = new Gson();
     public static final int[] TIME_TAKEN_BUCKETS = new int[] { 100, 500, 1000, 5000, 10000, 50000 };
+    public static final String[] DAY_NAMES =
+            new String[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+    public static final String[] MONTH_NAMES =
+            new String[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
+                    "Nov", "Dec" };
+    public static final DateFormat YEAR_FORMAT = new SimpleDateFormat("yyyy");
+    public static final DateFormat MONTH_FORMAT = new SimpleDateFormat("M");
+    public static final DateFormat DAY_OF_WEEK_FORMAT = new SimpleDateFormat("u");
+    public static final DateFormat HOUR_FORMAT = new SimpleDateFormat("HH");
     private static final DecimalFormat BYTES_FORMAT = new DecimalFormat("#.##");
     private static final DecimalFormat PERCENT_FORMAT = new DecimalFormat("0.00%");
     private static Pattern logPattern;

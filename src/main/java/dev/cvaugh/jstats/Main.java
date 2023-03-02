@@ -12,11 +12,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 public class Main {
     private static final String TRUNCATED_CELL =
             "<span class=\"truncated\" title=\"%s\">%s<span class=\"truncation-marker\">&raquo;</span></span>";
+    private static final String TIME_ROW =
+            "<tr><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
     private static final String USERS_ROW =
             "<tr><td class=\"left\">%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
     private static final String IP_ROW =
@@ -139,11 +142,114 @@ public class Main {
                                     entries.stream().mapToLong(e -> e.bytesSent).sum()));
         }
         // TODO handle empty or "-" values
-        case YEARLY_TABLE -> {}
-        case MONTHLY_TABLE -> {}
-        case DAY_OF_MONTH_TABLE -> {}
-        case DAY_OF_WEEK_TABLE -> {}
-        case HOURLY_TABLE -> {}
+        case YEARLY_TABLE -> {
+            Map<String, Integer> counts = new HashMap<>();
+            Map<String, Long> sizes = new HashMap<>();
+            Map<String, HashSet<String>> unique = new HashMap<>();
+            long totalBandwidth = 0;
+            for(LogEntry entry : entries) {
+                String year = Utils.YEAR_FORMAT.format(entry.time);
+                counts.put(year, counts.getOrDefault(year, 0) + 1);
+                sizes.put(year, sizes.getOrDefault(year, 0L) + entry.bytesSent);
+                totalBandwidth += entry.bytesSent;
+                unique.computeIfAbsent(year, k -> new HashSet<>());
+                unique.get(year).add(entry.remoteHostname);
+            }
+            counts = Utils.sortByValue(counts);
+            StringBuilder sb = new StringBuilder();
+            for(String year : new TreeSet<>(counts.keySet())) {
+                sb.append(String.format(TIME_ROW, year,
+                        unique.containsKey(year) ? unique.get(year).size() : 0, counts.get(year),
+                        Utils.formatPercent(counts.get(year), entries.size()),
+                        Utils.humanReadableSize(sizes.get(year)),
+                        Utils.formatPercent(sizes.get(year), totalBandwidth)));
+            }
+            return template.replace("{{rows}}", sb.toString()).replace("{{avg_visitors}}",
+                            String.valueOf(
+                                    unique.values().stream().mapToInt(Set::size).sum() / counts.size()))
+                    .replace("{{avg_visits}}", String.valueOf(entries.size() / counts.size()))
+                    .replace("{{avg_bandwidth}}",
+                            Utils.humanReadableSize(totalBandwidth / counts.size()));
+        }
+        case MONTHLY_TABLE -> {
+            int[] counts = new int[12];
+            long[] sizes = new long[12];
+            Map<Integer, HashSet<String>> unique = new HashMap<>();
+            long totalBandwidth = 0;
+            for(LogEntry entry : entries) {
+                int month = Integer.parseInt(Utils.MONTH_FORMAT.format(entry.time)) - 1;
+                counts[month]++;
+                sizes[month] += entry.bytesSent;
+                totalBandwidth += entry.bytesSent;
+                unique.computeIfAbsent(month, k -> new HashSet<>());
+                unique.get(month).add(entry.remoteHostname);
+            }
+            StringBuilder sb = new StringBuilder();
+            for(int month = 0; month < 12; month++) {
+                sb.append(String.format(TIME_ROW, Utils.MONTH_NAMES[month],
+                        unique.containsKey(month) ? unique.get(month).size() : 0, counts[month],
+                        Utils.formatPercent(counts[month], entries.size()),
+                        Utils.humanReadableSize(sizes[month]),
+                        Utils.formatPercent(sizes[month], totalBandwidth)));
+            }
+            return template.replace("{{rows}}", sb.toString()).replace("{{avg_visitors}}",
+                            String.valueOf(unique.values().stream().mapToInt(Set::size).sum() / 12))
+                    .replace("{{avg_visits}}", String.valueOf(entries.size() / 12))
+                    .replace("{{avg_bandwidth}}", Utils.humanReadableSize(totalBandwidth / 12));
+        }
+        case DAY_OF_WEEK_TABLE -> {
+            int[] counts = new int[7];
+            long[] sizes = new long[7];
+            Map<Integer, HashSet<String>> unique = new HashMap<>();
+            long totalBandwidth = 0;
+            for(LogEntry entry : entries) {
+                int day = Integer.parseInt(Utils.DAY_OF_WEEK_FORMAT.format(entry.time)) - 1;
+                counts[day]++;
+                sizes[day] += entry.bytesSent;
+                totalBandwidth += entry.bytesSent;
+                unique.computeIfAbsent(day, k -> new HashSet<>());
+                unique.get(day).add(entry.remoteHostname);
+            }
+            StringBuilder sb = new StringBuilder();
+            for(int day = 0; day < 7; day++) {
+                sb.append(String.format(TIME_ROW, Utils.DAY_NAMES[day],
+                        unique.containsKey(day) ? unique.get(day).size() : 0, counts[day],
+                        Utils.formatPercent(counts[day], entries.size()),
+                        Utils.humanReadableSize(sizes[day]),
+                        Utils.formatPercent(sizes[day], totalBandwidth)));
+            }
+            return template.replace("{{rows}}", sb.toString()).replace("{{avg_visitors}}",
+                            String.valueOf(unique.values().stream().mapToInt(Set::size).sum() / 7))
+                    .replace("{{avg_visits}}", String.valueOf(entries.size() / 7))
+                    .replace("{{avg_bandwidth}}", Utils.humanReadableSize(totalBandwidth / 7));
+        }
+        case HOURLY_TABLE -> {
+            Map<String, Integer> counts = new HashMap<>();
+            Map<String, Long> sizes = new HashMap<>();
+            Map<String, HashSet<String>> unique = new HashMap<>();
+            long totalBandwidth = 0;
+            for(LogEntry entry : entries) {
+                String hour = Utils.HOUR_FORMAT.format(entry.time);
+                counts.put(hour, counts.getOrDefault(hour, 0) + 1);
+                sizes.put(hour, sizes.getOrDefault(hour, 0L) + entry.bytesSent);
+                totalBandwidth += entry.bytesSent;
+                unique.computeIfAbsent(hour, k -> new HashSet<>());
+                unique.get(hour).add(entry.remoteHostname);
+            }
+            counts = Utils.sortByValue(counts);
+            StringBuilder sb = new StringBuilder();
+            for(String hour : new TreeSet<>(counts.keySet())) {
+                sb.append(String.format(TIME_ROW, hour,
+                        unique.containsKey(hour) ? unique.get(hour).size() : 0, counts.get(hour),
+                        Utils.formatPercent(counts.get(hour), entries.size()),
+                        Utils.humanReadableSize(sizes.get(hour)),
+                        Utils.formatPercent(sizes.get(hour), totalBandwidth)));
+            }
+            return template.replace("{{rows}}", sb.toString()).replace("{{avg_visitors}}",
+                            String.valueOf(unique.values().stream().mapToInt(Set::size).sum() / 24))
+                    .replace("{{avg_visits}}", String.valueOf(entries.size() / 24))
+                    .replace("{{avg_bandwidth}}", Utils.humanReadableSize(totalBandwidth / 24));
+        }
         case IP_TABLE -> {
             Map<String, Integer> counts = new HashMap<>();
             Map<String, Long> sizes = new HashMap<>();
@@ -225,7 +331,9 @@ public class Main {
                         userAgent.length() > Config.instance.truncateWideColumns ?
                                 String.format(TRUNCATED_CELL, userAgent, userAgent.substring(0,
                                         Config.instance.truncateWideColumns)) :
-                                userAgent, unique.get(userAgent).size(), counts.get(userAgent),
+                                userAgent,
+                        unique.containsKey(userAgent) ? unique.get(userAgent).size() : 0,
+                        counts.get(userAgent),
                         Utils.formatPercent(counts.get(userAgent), entries.size()),
                         Utils.humanReadableSize(sizes.get(userAgent)),
                         Utils.formatPercent(sizes.get(userAgent), total),

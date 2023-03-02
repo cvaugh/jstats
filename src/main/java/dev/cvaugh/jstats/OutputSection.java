@@ -9,7 +9,6 @@ public enum OutputSection {
     OVERALL(LogElement.REMOTE_HOSTNAME, LogElement.BYTES_SENT),
     YEARLY_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.REMOTE_HOSTNAME),
     MONTHLY_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.REMOTE_HOSTNAME),
-    DAY_OF_MONTH_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.REMOTE_HOSTNAME),
     DAY_OF_WEEK_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.REMOTE_HOSTNAME),
     HOURLY_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.REMOTE_HOSTNAME),
     IP_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.REMOTE_HOSTNAME),
