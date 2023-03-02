@@ -11,7 +11,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 public class Config {
-    public static final File FILE = new File("config.json");
+    private static final File CONFIG_DIR = new File(
+            Utils.replaceTildeInPath("~" + File.separator + ".config" + File.separator + "jstats"));
+    public static final File FILE = new File(CONFIG_DIR, "config.json");
     private static final Gson PRETTY_GSON = new GsonBuilder().setPrettyPrinting().create();
     public static Config instance = new Config();
     private static DateFormat inputDF;
@@ -38,6 +40,20 @@ public class Config {
     public int logVerbosity = 1;
 
     public static void load() throws IOException {
+        if(!CONFIG_DIR.exists()) {
+            try {
+                if(!CONFIG_DIR.mkdirs()) {
+                    Logger.log("Failed to create config directory at %s", Logger.ERROR,
+                            CONFIG_DIR.getAbsolutePath());
+                    System.exit(1);
+                }
+            } catch(Exception e) {
+                Logger.log("Failed to create config directory at %s", Logger.ERROR,
+                        CONFIG_DIR.getAbsolutePath());
+                Logger.log(e, Logger.ERROR);
+                System.exit(1);
+            }
+        }
         if(!FILE.exists()) {
             Logger.log("Creating missing config.json at %s", Logger.WARN, FILE.getAbsolutePath());
             Config.instance.write();
