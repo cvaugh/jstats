@@ -8,6 +8,7 @@
     <artifactId>jstats</artifactId>
     <name>JStats</name>
     <version>0.1.0-SNAPSHOT</version>
+    <url>https://github.com/cvaugh/jstats</url>
     <packaging>jar</packaging>
 
     <properties>
@@ -68,6 +69,37 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <ignoreMissingFile>false</ignoreMissingFile>
+                    <file>${project.build.directory}/classes/templates/footer.html</file>
+                    <replacements>
+                        <replacement>
+                            <token>%PROJECT_NAME%</token>
+                            <value>${project.name}</value>
+                        </replacement>
+                        <replacement>
+                            <token>%PROJECT_VERSION%</token>
+                            <value>${project.version}</value>
+                        </replacement>
+                        <replacement>
+                            <token>%PROJECT_URL%</token>
+                            <value>${project.url}</value>
+                        </replacement>
+                    </replacements>
+                </configuration>
             </plugin>
         </plugins>
     </build>

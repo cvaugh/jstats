@@ -10,8 +10,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -20,8 +23,10 @@ import java.util.zip.GZIPInputStream;
 
 public class Utils {
     public static final Gson GSON = new Gson();
+    public static final int[] TIME_TAKEN_BUCKETS = new int[] { 100, 500, 1000, 5000, 10000, 50000 };
+    private static final DecimalFormat BYTES_FORMAT = new DecimalFormat("#.00");
+    private static final DecimalFormat PERCENT_FORMAT = new DecimalFormat("0.00%");
     private static Pattern logPattern;
-    private static int skipped = 0;
 
     public static List<LogEntry> readLog(File file) {
         Logger.log("Reading log file: %s", Logger.DEBUG, file.getAbsolutePath());
@@ -51,7 +56,7 @@ public class Utils {
     }
 
     public static List<LogEntry> parseLog(List<String> lines, String fileName) {
-        skipped = 0;
+        int skipped = 0;
         logPattern = Pattern.compile(createFormatRegex(Config.instance.logFormat));
         List<LogEntry> entries = new ArrayList<>();
         int i = 1;
@@ -98,12 +103,49 @@ public class Utils {
     public static String readTemplate(String name) throws IOException {
         InputStream in = Utils.class.getResourceAsStream("/templates/" + name + ".html");
         if(in == null) {
-            throw new RuntimeException("Template not found: " + name);
+            return "";
         }
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         String template = String.join("\n", reader.lines().toList());
         reader.close();
         in.close();
         return template;
+    }
+
+    public static String readTemplate(OutputSection section) throws IOException {
+        return readTemplate(section.name().toLowerCase());
+    }
+
+    public static String humanReadableSize(long bytes) {
+        double b = (double) bytes;
+        int magnitude = 0;
+        while(b > 1000) {
+            b /= 1000;
+            magnitude++;
+        }
+        if(magnitude == 0) {
+            return b + " B";
+        } else {
+            return String.format("%s %sB", BYTES_FORMAT.format(b),
+                    "kMGTPEZY".charAt(magnitude - 1));
+        }
+    }
+
+    public static String formatPercent(long part, long whole) {
+        return PERCENT_FORMAT.format((double) part / (double) whole);
+    }
+
+    // https://stackoverflow.com/a/2581754
+    public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
+        List<Map.Entry<K, V>> list = new ArrayList<>(map.entrySet());
+        list.sort(Map.Entry.comparingByValue());
+        Collections.reverse(list);
+
+        Map<K, V> result = new LinkedHashMap<>();
+        for(Map.Entry<K, V> entry : list) {
+            result.put(entry.getKey(), entry.getValue());
+        }
+
+        return result;
     }
 }

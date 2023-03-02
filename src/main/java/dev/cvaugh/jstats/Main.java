@@ -2,16 +2,24 @@ package dev.cvaugh.jstats;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 public class Main {
+    private static final String REFERERS_ROW =
+            "<tr><td class=\"jstats-referer\">%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
+    private static final String RESPONSES_ROW =
+            "<tr><td>%d</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
+    private static final String TIME_TAKEN_ROW = "<tr><td>%s%s%s</td><td>%d</td><td>%s</td></tr>\n";
 
     public static void main(String[] args) {
         try {
@@ -60,7 +68,6 @@ public class Main {
     }
 
     public static void generateStatistics(List<LogEntry> entries) {
-        Logger.log("Generating statistics", Logger.DEBUG);
         Set<LogElement> availableElements = new HashSet<>(Arrays.stream(LogElement.values())
                 .filter(e -> Config.instance.logFormat.contains(e.format)).toList());
         List<OutputSection> availableSections =
@@ -69,16 +76,28 @@ public class Main {
         String template = "";
         try {
             template = Utils.readTemplate("main");
-        } catch(Exception e) {
-            Logger.log("Failed to read template", Logger.ERROR);
+        } catch(IOException e) {
+            Logger.log("Failed to read template: main", Logger.ERROR);
             Logger.log(e, Logger.ERROR);
             System.exit(1);
         }
         for(OutputSection section : availableSections) {
-            template = template.replace("{{" + section.name().toLowerCase() + "}}",
-                    generateOutputSection(section, entries));
+            Logger.log("Generating statistics for %s", Logger.DEBUG,
+                    section.toString().toLowerCase());
+            try {
+                template = template.replace("{{" + section.name().toLowerCase() + "}}",
+                        generateOutputSection(section, entries));
+            } catch(IOException e) {
+                Logger.log("Failed to read template: %s", Logger.ERROR,
+                        section.name().toLowerCase());
+                Logger.log(e, Logger.ERROR);
+                System.exit(1);
+            }
         }
-        Logger.log("Writing output to %s", Logger.INFO, Config.getOutputFile().getAbsolutePath());
+        // todo: remove unavailable sections
+        Logger.log("Writing %s to %s", Logger.INFO,
+                Utils.humanReadableSize(template.getBytes(StandardCharsets.UTF_8).length),
+                Config.getOutputFile().getAbsolutePath());
         try {
             Files.writeString(Config.getOutputFile().toPath(), template);
         } catch(IOException e) {
@@ -88,13 +107,27 @@ public class Main {
         }
     }
 
-    public static String generateOutputSection(OutputSection section, List<LogEntry> entries) {
+    public static String generateOutputSection(OutputSection section, List<LogEntry> entries)
+            throws IOException {
+        String template = Utils.readTemplate(section);
         switch(section) {
         case GENERATED_DATE -> {
             return Config.getOutputDateFormat().format(System.currentTimeMillis());
         }
-        case HEADER -> {}
-        case OVERALL -> {}
+        case HEADER -> {
+            return template.replace("{{first_visit}}",
+                            Config.getOutputDateFormat().format(entries.get(0).time))
+                    .replace("{{latest_visit}}", Config.getOutputDateFormat()
+                            .format(entries.get(entries.size() - 1).time));
+        }
+        case OVERALL -> {
+            HashSet<String> visitors =
+                    new HashSet<>(entries.stream().map(e -> e.remoteHostname).toList());
+            return template.replace("{{visitors}}", String.valueOf(visitors.size()))
+                    .replace("{{visits}}", String.valueOf(entries.size())).replace("{{bandwidth}}",
+                            Utils.humanReadableSize(
+                                    entries.stream().mapToLong(e -> e.bytesSent).sum()));
+        }
         case YEARLY_TABLE -> {}
         case MONTHLY_TABLE -> {}
         case DAY_OF_MONTH_TABLE -> {}
@@ -106,10 +139,83 @@ public class Main {
         case PAGES_TABLE -> {}
         case FILES_TABLE -> {}
         case QUERIES_TABLE -> {}
-        case REFERERS_TABLE -> {}
-        case RESPONSES_TABLE -> {}
-        case TIME_TAKEN_TABLE -> {}
-        case FOOTER -> {}
+        case REFERERS_TABLE -> {
+            Map<String, Integer> counts = new HashMap<>();
+            Map<String, Long> sizes = new HashMap<>();
+            long total = 0;
+            for(LogEntry entry : entries) {
+                counts.put(entry.referer, counts.getOrDefault(entry.referer, 0) + 1);
+                sizes.put(entry.referer, sizes.getOrDefault(entry.referer, 0L) + entry.bytesSent);
+                total += entry.bytesSent;
+            }
+            counts = Utils.sortByValue(counts);
+            StringBuilder sb = new StringBuilder();
+            for(String referer : counts.keySet()) {
+                sb.append(String.format(REFERERS_ROW, referer, counts.get(referer),
+                        Utils.formatPercent(counts.get(referer), entries.size()),
+                        Utils.humanReadableSize(sizes.get(referer)),
+                        Utils.formatPercent(sizes.get(referer), total)));
+            }
+            return template.replace("{{rows}}", sb.toString());
+        }
+        case RESPONSES_TABLE -> {
+            Map<Integer, Integer> counts = new HashMap<>();
+            Map<Integer, Long> sizes = new HashMap<>();
+            long total = 0;
+            for(LogEntry entry : entries) {
+                counts.put(entry.statusFinal, counts.getOrDefault(entry.statusFinal, 0) + 1);
+                sizes.put(entry.statusFinal,
+                        sizes.getOrDefault(entry.statusFinal, 0L) + entry.bytesSent);
+                total += entry.bytesSent;
+            }
+            counts = Utils.sortByValue(counts);
+            StringBuilder sb = new StringBuilder();
+            for(int response : counts.keySet()) {
+                sb.append(String.format(RESPONSES_ROW, response, counts.get(response),
+                        Utils.formatPercent(counts.get(response), entries.size()),
+                        Utils.humanReadableSize(sizes.get(response)),
+                        Utils.formatPercent(sizes.get(response), total)));
+            }
+            return template.replace("{{rows}}", sb.toString());
+        }
+        case TIME_TAKEN_TABLE -> {
+            int[] buckets = new int[Utils.TIME_TAKEN_BUCKETS.length + 1];
+            long total = 0;
+            for(LogEntry entry : entries) {
+                total += entry.timeToServeUs;
+                if(entry.timeToServeUs >=
+                        Utils.TIME_TAKEN_BUCKETS[Utils.TIME_TAKEN_BUCKETS.length - 1]) {
+                    buckets[Utils.TIME_TAKEN_BUCKETS.length]++;
+                } else {
+                    for(int i = 0; i < Utils.TIME_TAKEN_BUCKETS.length; i++) {
+                        if(entry.timeToServeUs < Utils.TIME_TAKEN_BUCKETS[i]) {
+                            buckets[i]++;
+                            break;
+                        }
+                    }
+                }
+            }
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format(TIME_TAKEN_ROW, "", "&lt; ", Utils.TIME_TAKEN_BUCKETS[0],
+                    buckets[0], Utils.formatPercent(buckets[0], entries.size())));
+            for(int i = 1; i < buckets.length; i++) {
+                long size = buckets[i];
+                if(i == Utils.TIME_TAKEN_BUCKETS.length) {
+                    sb.append(String.format(TIME_TAKEN_ROW, "", "&geq; ",
+                            Utils.TIME_TAKEN_BUCKETS[i - 1], size,
+                            Utils.formatPercent(size, entries.size())));
+                } else {
+                    sb.append(String.format(TIME_TAKEN_ROW, Utils.TIME_TAKEN_BUCKETS[i - 1], "-",
+                            (Utils.TIME_TAKEN_BUCKETS[i] - 1), size,
+                            Utils.formatPercent(size, entries.size())));
+                }
+            }
+            return template.replace("{{rows}}", sb.toString())
+                    .replace("{{avg}}", String.valueOf(total / entries.size()));
+        }
+        case FOOTER -> {
+            return template;
+        }
         }
         return "?";
     }
