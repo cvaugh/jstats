@@ -20,6 +20,8 @@ public class Main {
             "<span class=\"truncated\" title=\"%s\">%s<span class=\"truncation-marker\">&raquo;</span></span>";
     private static final String TIME_ROW =
             "<tr><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
+    private static final String PORTS_ROW =
+            "<tr><td class=\"left\">%d</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
     private static final String USERS_ROW =
             "<tr><td class=\"left\">%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
     private static final String IP_ROW =
@@ -126,15 +128,10 @@ public class Main {
     public static String generateOutputSection(OutputSection section, List<LogEntry> entries)
             throws IOException {
         String template = Utils.readTemplate(section);
+        // TODO consolidate similar sections
         switch(section) {
         case GENERATED_DATE -> {
             return Config.getOutputDateFormat().format(System.currentTimeMillis());
-        }
-        case HEADER -> {
-            return template.replace("{{first_visit}}",
-                            Config.getOutputDateFormat().format(entries.get(0).time))
-                    .replace("{{latest_visit}}", Config.getOutputDateFormat()
-                            .format(entries.get(entries.size() - 1).time));
         }
         case OVERALL -> {
             HashSet<String> visitors =
@@ -143,6 +140,76 @@ public class Main {
                     .replace("{{visits}}", String.valueOf(entries.size())).replace("{{bandwidth}}",
                             Utils.humanReadableSize(
                                     entries.stream().mapToLong(e -> e.bytesSent).sum()));
+        }
+        case DATES -> {
+            return template.replace("{{first_visit}}",
+                            Config.getOutputDateFormat().format(entries.get(0).time))
+                    .replace("{{latest_visit}}", Config.getOutputDateFormat()
+                            .format(entries.get(entries.size() - 1).time));
+        }
+        case BYTES_TRANSFERRED -> {
+            long sent = 0;
+            long received = 0;
+            for(LogEntry entry : entries) {
+                sent += entry.bytesSent;
+                received += entry.bytesReceived;
+            }
+            return template.replace("{{bytes_sent}}", Utils.humanReadableSize(sent))
+                    .replace("{{bytes_received}}", Utils.humanReadableSize(received))
+                    .replace("{{total}}", Utils.humanReadableSize(sent + received));
+        }
+        case SERVERS_TABLE -> {
+            Map<String, Integer> counts = new HashMap<>();
+            Map<String, Long> sizes = new HashMap<>();
+            Map<String, Long> latestVisits = new HashMap<>();
+            long total = 0;
+            for(LogEntry entry : entries) {
+                counts.put(entry.serverName, counts.getOrDefault(entry.serverName, 0) + 1);
+                sizes.put(entry.serverName,
+                        sizes.getOrDefault(entry.serverName, 0L) + entry.bytesSent);
+                total += entry.bytesSent;
+                if(entry.time > latestVisits.getOrDefault(entry.serverName, 0L)) {
+                    latestVisits.put(entry.serverName, entry.time);
+                }
+            }
+            counts = Utils.sortByValue(counts);
+            StringBuilder sb = new StringBuilder();
+            for(String server : counts.keySet()) {
+                sb.append(String.format(USERS_ROW,
+                        server.length() > Config.instance.truncateWideColumns ?
+                                String.format(TRUNCATED_CELL, server,
+                                        server.substring(0, Config.instance.truncateWideColumns)) :
+                                server, counts.get(server),
+                        Utils.formatPercent(counts.get(server), entries.size()),
+                        Utils.humanReadableSize(sizes.get(server)),
+                        Utils.formatPercent(sizes.get(server), total),
+                        Config.getOutputDateFormat().format(latestVisits.get(server))));
+            }
+            return template.replace("{{rows}}", sb.toString());
+        }
+        case PORTS_TABLE -> {
+            Map<Integer, Integer> counts = new HashMap<>();
+            Map<Integer, Long> sizes = new HashMap<>();
+            Map<Integer, Long> latestVisits = new HashMap<>();
+            long total = 0;
+            for(LogEntry entry : entries) {
+                counts.put(entry.port, counts.getOrDefault(entry.port, 0) + 1);
+                sizes.put(entry.port, sizes.getOrDefault(entry.port, 0L) + entry.bytesSent);
+                total += entry.bytesSent;
+                if(entry.time > latestVisits.getOrDefault(entry.port, 0L)) {
+                    latestVisits.put(entry.port, entry.time);
+                }
+            }
+            counts = Utils.sortByValue(counts);
+            StringBuilder sb = new StringBuilder();
+            for(int port : new TreeSet<>(counts.keySet())) {
+                sb.append(String.format(PORTS_ROW, port, counts.get(port),
+                        Utils.formatPercent(counts.get(port), entries.size()),
+                        Utils.humanReadableSize(sizes.get(port)),
+                        Utils.formatPercent(sizes.get(port), total),
+                        Config.getOutputDateFormat().format(latestVisits.get(port))));
+            }
+            return template.replace("{{rows}}", sb.toString());
         }
         case YEARLY_TABLE -> {
             Map<String, Integer> counts = new HashMap<>();
