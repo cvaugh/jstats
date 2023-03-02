@@ -516,16 +516,17 @@ public class Main {
             return template.replace("{{rows}}", sb.toString());
         }
         case TIME_TAKEN_TABLE -> {
-            int[] buckets = new int[Utils.TIME_TAKEN_BUCKETS.length + 1];
+            int[] buckets = new int[Config.instance.timeTakenBuckets.length + 1];
             long total = 0;
             for(LogEntry entry : entries) {
                 total += entry.timeToServeUs;
                 if(entry.timeToServeUs >=
-                        Utils.TIME_TAKEN_BUCKETS[Utils.TIME_TAKEN_BUCKETS.length - 1]) {
-                    buckets[Utils.TIME_TAKEN_BUCKETS.length]++;
+                        Config.instance.timeTakenBuckets[Config.instance.timeTakenBuckets.length -
+                                1]) {
+                    buckets[Config.instance.timeTakenBuckets.length]++;
                 } else {
-                    for(int i = 0; i < Utils.TIME_TAKEN_BUCKETS.length; i++) {
-                        if(entry.timeToServeUs < Utils.TIME_TAKEN_BUCKETS[i]) {
+                    for(int i = 0; i < Config.instance.timeTakenBuckets.length; i++) {
+                        if(entry.timeToServeUs < Config.instance.timeTakenBuckets[i]) {
                             buckets[i]++;
                             break;
                         }
@@ -533,17 +534,18 @@ public class Main {
                 }
             }
             StringBuilder sb = new StringBuilder();
-            sb.append(String.format(TIME_TAKEN_ROW, "", "&lt; ", Utils.TIME_TAKEN_BUCKETS[0],
-                    buckets[0], Utils.formatPercent(buckets[0], entries.size())));
+            sb.append(
+                    String.format(TIME_TAKEN_ROW, "", "&lt; ", Config.instance.timeTakenBuckets[0],
+                            buckets[0], Utils.formatPercent(buckets[0], entries.size())));
             for(int i = 1; i < buckets.length; i++) {
                 long size = buckets[i];
-                if(i == Utils.TIME_TAKEN_BUCKETS.length) {
+                if(i == Config.instance.timeTakenBuckets.length) {
                     sb.append(String.format(TIME_TAKEN_ROW, "", "&geq; ",
-                            Utils.TIME_TAKEN_BUCKETS[i - 1], size,
+                            Config.instance.timeTakenBuckets[i - 1], size,
                             Utils.formatPercent(size, entries.size())));
                 } else {
-                    sb.append(String.format(TIME_TAKEN_ROW, Utils.TIME_TAKEN_BUCKETS[i - 1], "-",
-                            (Utils.TIME_TAKEN_BUCKETS[i] - 1), size,
+                    sb.append(String.format(TIME_TAKEN_ROW, Config.instance.timeTakenBuckets[i - 1],
+                            "-", (Config.instance.timeTakenBuckets[i] - 1), size,
                             Utils.formatPercent(size, entries.size())));
                 }
             }

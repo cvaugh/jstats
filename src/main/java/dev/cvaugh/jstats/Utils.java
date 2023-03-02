@@ -25,7 +25,6 @@ import java.util.zip.GZIPInputStream;
 
 public class Utils {
     public static final Gson GSON = new Gson();
-    public static final int[] TIME_TAKEN_BUCKETS = new int[] { 100, 500, 1000, 5000, 10000, 50000 };
     public static final String[] DAY_NAMES =
             new String[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
     public static final String[] MONTH_NAMES =

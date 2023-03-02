@@ -22,12 +22,13 @@ public class Config {
     public boolean readRotatedLogs = true;
     public String logFormat =
             "%v:%p %h %l %u %t \"%r\" %s:%>s %I %O \"%{Referer}i\" \"%{User-Agent}i\" %D %k %f \"%U\" \"%q\"";
-    public String outputFilePath = "~/simplestats.html";
+    public String outputFilePath = "~/jstats.html";
     public String inputDateFormat = "dd/MMM/yyyy:HH:mm:ss Z";
     public String outputDateFormat = "yyyy-MM-dd HH:mm:ss zzz";
     public String whoisTool = "https://iplocation.io/ip/{{address}}";
     public boolean printMalformedEntries = false;
     public boolean ignoreInternalLogs = true;
+    public int[] timeTakenBuckets = new int[] { 100, 500, 1000, 5000, 10000, 50000 };
     public int truncateWideColumns = 100;
     public int ipRequestCountThreshold = 5;
     public int userAgentRequestCountThreshold = 3;
@@ -44,6 +45,10 @@ public class Config {
             String json = Files.readString(FILE.toPath(), StandardCharsets.UTF_8);
             Config.instance = Utils.GSON.fromJson(json, Config.class);
         }
+        if(instance.timeTakenBuckets.length == 0) {
+            Logger.log("timeTakenBuckets must have at least one entry", Logger.ERROR);
+            System.exit(1);
+        }
         inputDF = new SimpleDateFormat(instance.inputDateFormat);
         outputDF = new SimpleDateFormat(instance.outputDateFormat);
     }
@@ -57,13 +62,11 @@ public class Config {
     }
 
     public static File getAccessLogDirectory() {
-        // return new File(Utils.replaceTildeInPath(instance.accessLogDirectory));
-        return new File("logs"); // XXX FOR TESTING ONLY
+        return new File(Utils.replaceTildeInPath(instance.accessLogDirectory));
     }
 
     public static File getOutputFile() {
-        // return new File(Utils.replaceTildeInPath(instance.outputFilePath));
-        return new File("out.html"); // XXX FOR TESTING ONLY
+        return new File(Utils.replaceTildeInPath(instance.outputFilePath));
     }
 
     public static DateFormat getInputDateFormat() {
