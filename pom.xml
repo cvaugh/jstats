@@ -6,8 +6,8 @@
 
     <groupId>dev.cvaugh</groupId>
     <artifactId>jstats</artifactId>
-    <name>JStats</name>
-    <version>0.1.0-SNAPSHOT</version>
+    <name>jStats</name>
+    <version>1.0.0</version>
     <url>https://github.com/cvaugh/jstats</url>
     <packaging>jar</packaging>
 
