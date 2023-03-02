@@ -4,7 +4,7 @@ A tool for generating easy-to-read summaries of your Apache web server logs.
 
 ## Configuration
 
-The program's configuration file can be found at `~/.config/simplestats/simplestats.yml`.
+The program's configuration file can be found at `~/.config/jstats/config.json`.
 
 | Key                              | Description                                                                                                                                                                                                    | Default value                                                                                       |
 |----------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
