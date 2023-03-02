@@ -20,18 +20,10 @@ public class Logger {
         if(level == NONE || level < logLevel)
             return;
         switch(level) {
-        case DEBUG -> {
-            log(s, "DEBUG", System.out);
-        }
-        case INFO -> {
-            log(s, "INFO", System.out);
-        }
-        case WARN -> {
-            log(s, "WARN", System.err);
-        }
-        case ERROR -> {
-            log(s, "ERROR", System.err);
-        }
+        case DEBUG -> log(s, "DEBUG", System.out);
+        case INFO -> log(s, "INFO", System.out);
+        case WARN -> log(s, "WARN", System.err);
+        case ERROR -> log(s, "ERROR", System.err);
         default -> {}
         }
     }

@@ -94,7 +94,11 @@ public class Main {
             Logger.log(e, Logger.ERROR);
             System.exit(1);
         }
-        for(OutputSection section : availableSections) {
+        for(OutputSection section : OutputSection.values()) {
+            if(!availableSections.contains(section)) {
+                Logger.log("Skipping %s", Logger.DEBUG, section.toString().toLowerCase());
+                continue;
+            }
             Logger.log("Generating statistics for %s", Logger.DEBUG,
                     section.toString().toLowerCase());
             try {
@@ -107,7 +111,6 @@ public class Main {
                 System.exit(1);
             }
         }
-        // TODO remove unavailable sections
         Logger.log("Writing %s to %s", Logger.INFO,
                 Utils.humanReadableSize(template.getBytes(StandardCharsets.UTF_8).length),
                 Config.getOutputFile().getAbsolutePath());
@@ -141,7 +144,6 @@ public class Main {
                             Utils.humanReadableSize(
                                     entries.stream().mapToLong(e -> e.bytesSent).sum()));
         }
-        // TODO handle empty or "-" values
         case YEARLY_TABLE -> {
             Map<String, Integer> counts = new HashMap<>();
             Map<String, Long> sizes = new HashMap<>();

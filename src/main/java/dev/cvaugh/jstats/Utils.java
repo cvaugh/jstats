@@ -63,14 +63,13 @@ public class Utils {
             Logger.log(e, Logger.ERROR);
             return new ArrayList<>();
         }
-        return Utils.parseLog(lines, file.getName());
+        return Utils.parseLog(lines);
     }
 
-    public static List<LogEntry> parseLog(List<String> lines, String fileName) {
+    public static List<LogEntry> parseLog(List<String> lines) {
         int skipped = 0;
         logPattern = Pattern.compile(createFormatRegex(Config.instance.logFormat));
         List<LogEntry> entries = new ArrayList<>();
-        int i = 1;
         for(String line : lines) {
             LogEntry entry = parseLogLine(line);
             if(entry == null) {
@@ -78,7 +77,6 @@ public class Utils {
             } else {
                 entries.add(entry);
             }
-            i++;
         }
         if(Config.instance.printMalformedEntries)
             Logger.log("Skipped %d malformed entries", Logger.DEBUG, skipped);
