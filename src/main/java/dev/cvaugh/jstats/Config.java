@@ -39,8 +39,9 @@ public class Config {
     public static void load() throws IOException {
         Logger.log("Loading config.json", Logger.DEBUG);
         if(!FILE.exists()) {
-            Logger.log("Creating missing config.json at %s", Logger.DEBUG, FILE.getAbsolutePath());
+            Logger.log("Creating missing config.json at %s", Logger.WARN, FILE.getAbsolutePath());
             Config.instance.write();
+            System.exit(1);
         } else {
             String json = Files.readString(FILE.toPath(), StandardCharsets.UTF_8);
             Config.instance = Utils.GSON.fromJson(json, Config.class);
@@ -51,6 +52,8 @@ public class Config {
         }
         inputDF = new SimpleDateFormat(instance.inputDateFormat);
         outputDF = new SimpleDateFormat(instance.outputDateFormat);
+        if(instance.truncateWideColumns == 0)
+            instance.truncateWideColumns = Integer.MAX_VALUE;
     }
 
     public void write() throws IOException {
