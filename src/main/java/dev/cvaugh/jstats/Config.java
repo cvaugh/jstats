@@ -24,7 +24,10 @@ public class Config {
     public boolean readRotatedLogs = true;
     public String logFormat =
             "%v:%p %h %l %u %t \"%r\" %s:%>s %I %O \"%{Referer}i\" \"%{User-Agent}i\" %D %k %f \"%U\" \"%q\"";
-    public String outputFilePath = "~/jstats.html";
+    public String outputDirectory = "~";
+    public String outputFileName = "jstats.html";
+    public boolean outputMonthSubpages = true;
+    public String monthSubpagePattern = "{{year}}-{{month}}.html";
     public String inputDateFormat = "dd/MMM/yyyy:HH:mm:ss Z";
     public String outputDateFormat = "yyyy-MM-dd HH:mm:ss zzz";
     public String whoisTool = "https://iplocation.io/ip/{{address}}";
@@ -88,8 +91,18 @@ public class Config {
         return new File(Utils.replaceTildeInPath(instance.accessLogDirectory));
     }
 
+    public static File getOutputDir() {
+        return new File(Utils.replaceTildeInPath(instance.outputDirectory));
+    }
+
     public static File getOutputFile() {
-        return new File(Utils.replaceTildeInPath(instance.outputFilePath));
+        return new File(getOutputDir(), instance.outputFileName);
+    }
+
+    public static File getMonthlySubpageFile(int year, int month) {
+        return new File(getOutputDir(),
+                instance.monthSubpagePattern.replace("{{year}}", String.valueOf(year))
+                        .replace("{{month}}", String.format("%02d", month)));
     }
 
     public static DateFormat getInputDateFormat() {

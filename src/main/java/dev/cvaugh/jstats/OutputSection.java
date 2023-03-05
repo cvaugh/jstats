@@ -11,6 +11,7 @@ public enum OutputSection {
     PORTS_TABLE(LogElement.TIME, LogElement.PORT, LogElement.BYTES_SENT),
     YEARLY_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.REMOTE_HOSTNAME),
     MONTHLY_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.REMOTE_HOSTNAME),
+    MONTH_SUBPAGES(LogElement.TIME),
     DAY_OF_WEEK_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.REMOTE_HOSTNAME),
     HOURLY_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.REMOTE_HOSTNAME),
     IP_TABLE(LogElement.TIME, LogElement.BYTES_SENT, LogElement.REMOTE_HOSTNAME),

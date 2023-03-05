@@ -14,12 +14,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Main {
     private static final String TRUNCATED_CELL =
             "<span class=\"truncated\" title=\"%s\">%s<span class=\"truncation-marker\">&raquo;</span></span>";
     private static final String TIME_ROW =
             "<tr><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
+    private static final String MONTHLY_SUBPAGES_ROW =
+            "<tr><td>%d</td><td><a href=\"%s\">%s</a></td></tr>\n";
     private static final String PORTS_ROW =
             "<tr><td class=\"left\">%d</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
     private static final String USERS_ROW =
@@ -79,10 +82,50 @@ public class Main {
             entries.removeAll(remove);
         }
         Collections.sort(entries);
-        generateStatistics(entries);
+        String template = generateStatistics(entries, 0, 0);
+        Logger.log("Writing %s to %s", Logger.INFO,
+                Utils.humanReadableSize(template.getBytes(StandardCharsets.UTF_8).length),
+                Config.getOutputFile().getAbsolutePath());
+        try {
+            Files.writeString(Config.getOutputFile().toPath(), template);
+        } catch(IOException e) {
+            Logger.log("Failed to write output to %s", Logger.ERROR,
+                    Config.getOutputFile().getAbsolutePath());
+            Logger.log(e, Logger.ERROR);
+        }
+        if(Config.instance.outputMonthSubpages) {
+            if(!Config.getOutputDir().exists() && !Config.getOutputDir().mkdirs()) {
+                Logger.log("Failed to create month subpage directory at %s", Logger.ERROR,
+                        Config.getOutputDir().getAbsolutePath());
+                System.exit(1);
+            }
+            long start = entries.get(0).time;
+            long end = entries.get(entries.size() - 1).time;
+            int startYear = Integer.parseInt(Utils.YEAR_FORMAT.format(start));
+            int endYear = Integer.parseInt(Utils.YEAR_FORMAT.format(end));
+            int startMonth = Integer.parseInt(Utils.MONTH_FORMAT.format(start)) - 1;
+            int endMonth = Integer.parseInt(Utils.MONTH_FORMAT.format(end)) - 1;
+            for(int year = startYear; year <= endYear; year++) {
+                for(int month = (year == startYear ? startMonth : 0);
+                    month <= (year == endYear ? endMonth : 11); month++) {
+                    File subpage = Config.getMonthlySubpageFile(year, month + 1);
+                    template = generateStatistics(entries, year, month + 1);
+                    Logger.log("Writing %s to %s", Logger.INFO, Utils.humanReadableSize(
+                                    template.getBytes(StandardCharsets.UTF_8).length),
+                            subpage.getAbsolutePath());
+                    try {
+                        Files.writeString(subpage.toPath(), template);
+                    } catch(IOException e) {
+                        Logger.log("Failed to write output to %s", Logger.ERROR,
+                                subpage.getAbsolutePath());
+                        Logger.log(e, Logger.ERROR);
+                    }
+                }
+            }
+        }
     }
 
-    public static void generateStatistics(List<LogEntry> entries) {
+    public static String generateStatistics(List<LogEntry> entries, int year, int month) {
         Set<LogElement> availableElements = new HashSet<>(Arrays.stream(LogElement.values())
                 .filter(e -> Config.instance.logFormat.contains(e.format)).toList());
         List<OutputSection> availableSections =
@@ -96,16 +139,30 @@ public class Main {
             Logger.log(e, Logger.ERROR);
             System.exit(1);
         }
+        template = template.replace("{{title}}", year == 0 ?
+                "Apache Statistics" :
+                String.format("Apache Statistics (%s %d)", Utils.MONTH_NAMES_FULL[month - 1],
+                        year));
         for(OutputSection section : OutputSection.values()) {
             if(!availableSections.contains(section)) {
                 Logger.log("Skipping %s", Logger.DEBUG, section.toString().toLowerCase());
                 continue;
             }
-            Logger.log("Generating statistics for %s", Logger.DEBUG,
-                    section.toString().toLowerCase());
             try {
-                template = template.replace("{{" + section.name().toLowerCase() + "}}",
-                        generateOutputSection(section, entries));
+                if(year == 0) {
+                    Logger.log("Generating statistics for %s", Logger.DEBUG,
+                            section.toString().toLowerCase());
+                    template = template.replace("{{" + section.name().toLowerCase() + "}}",
+                            generateOutputSection(section, entries, true));
+                } else {
+                    Logger.log("Generating statistics for %s (%d-%02d)", Logger.DEBUG,
+                            section.toString().toLowerCase(), year, month);
+                    template = template.replace("{{" + section.name().toLowerCase() + "}}",
+                            generateOutputSection(section, entries.stream().filter(e ->
+                                    Integer.parseInt(Utils.YEAR_FORMAT.format(e.time)) == year &&
+                                            Integer.parseInt(Utils.MONTH_FORMAT.format(e.time)) ==
+                                                    month).collect(Collectors.toList()), false));
+                }
             } catch(IOException e) {
                 Logger.log("Failed to read template: %s", Logger.ERROR,
                         section.name().toLowerCase());
@@ -113,20 +170,11 @@ public class Main {
                 System.exit(1);
             }
         }
-        Logger.log("Writing %s to %s", Logger.INFO,
-                Utils.humanReadableSize(template.getBytes(StandardCharsets.UTF_8).length),
-                Config.getOutputFile().getAbsolutePath());
-        try {
-            Files.writeString(Config.getOutputFile().toPath(), template);
-        } catch(IOException e) {
-            Logger.log("Failed to write output to %s", Logger.ERROR,
-                    Config.getOutputFile().getAbsolutePath());
-            Logger.log(e, Logger.ERROR);
-        }
+        return template;
     }
 
-    public static String generateOutputSection(OutputSection section, List<LogEntry> entries)
-            throws IOException {
+    public static String generateOutputSection(OutputSection section, List<LogEntry> entries,
+            boolean includeSubpages) throws IOException {
         String template = Utils.readTemplate(section);
         // TODO consolidate similar sections
         switch(section) {
@@ -265,6 +313,31 @@ public class Main {
                             String.valueOf(unique.values().stream().mapToInt(Set::size).sum() / 12))
                     .replace("{{avg_visits}}", String.valueOf(entries.size() / 12))
                     .replace("{{avg_bandwidth}}", Utils.humanReadableSize(totalBandwidth / 12));
+        }
+        case MONTH_SUBPAGES -> {
+            if(!includeSubpages)
+                return "";
+            long start = entries.get(0).time;
+            long end = entries.get(entries.size() - 1).time;
+            int startYear = Integer.parseInt(Utils.YEAR_FORMAT.format(start));
+            int endYear = Integer.parseInt(Utils.YEAR_FORMAT.format(end));
+            int startMonth = Integer.parseInt(Utils.MONTH_FORMAT.format(start)) - 1;
+            int endMonth = Integer.parseInt(Utils.MONTH_FORMAT.format(end)) - 1;
+            StringBuilder sb = new StringBuilder();
+            for(int year = startYear; year <= endYear; year++) {
+                for(int month = (year == startYear ? startMonth : 0);
+                    month <= (year == endYear ? endMonth : 11); month++) {
+                    sb.append(String.format(MONTHLY_SUBPAGES_ROW, year,
+                            Config.instance.monthSubpagePattern.replace("{{year}}",
+                                            String.valueOf(year))
+                                    .replace("{{month}}", String.format("%02d", month + 1)),
+                            Utils.MONTH_NAMES_FULL[month]));
+                }
+                if(year != endYear) {
+                    sb.append("<tr></tr><tr></tr>");
+                }
+            }
+            return template.replace("{{rows}}", sb.toString());
         }
         case DAY_OF_WEEK_TABLE -> {
             int[] counts = new int[7];

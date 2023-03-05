@@ -30,6 +30,9 @@ public class Utils {
     public static final String[] MONTH_NAMES =
             new String[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
                     "Nov", "Dec" };
+    public static final String[] MONTH_NAMES_FULL =
+            new String[] { "January", "February", "March", "April", "May", "June", "July", "August",
+                    "September", "October", "November", "December" };
     public static final DateFormat YEAR_FORMAT = new SimpleDateFormat("yyyy");
     public static final DateFormat MONTH_FORMAT = new SimpleDateFormat("M");
     public static final DateFormat DAY_OF_WEEK_FORMAT = new SimpleDateFormat("u");

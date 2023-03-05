@@ -14,6 +14,7 @@ body {
 
 h1 {
     font-size: 26pt;
+    margin-bottom: 0;
 }
 
 h2 {
@@ -22,6 +23,14 @@ h2 {
 
 h3 {
     font-size: 14pt;
+}
+
+h4 {
+    font-size: 12pt;
+    font-family: monospace;
+    font-weight: normal;
+    color: rgba(0, 0, 0, 0.66);
+    margin: 0;
 }
 
 th {
@@ -84,7 +93,8 @@ table.full-log tr th, table.full-log tr td {
     </style>
   </head>
   <body>
-<h1>Apache Statistics ({{generated_date}})</h1>
+<h1>{{title}}</h1>
+<h4>Generated at {{generated_date}}</h4>
 <h2>Summary</h2>
 {{overall}}
 <br>
@@ -99,6 +109,7 @@ table.full-log tr th, table.full-log tr td {
 <h2>Times</h2>
 {{yearly_table}}
 {{monthly_table}}
+{{month_subpages}}
 {{day_of_week_table}}
 {{hourly_table}}
 <br>
