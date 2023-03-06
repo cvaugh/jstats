@@ -17,27 +17,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Main {
-    private static final String TRUNCATED_CELL =
-            "<span class=\"truncated\" title=\"%s\">%s<span class=\"truncation-marker\">&raquo;</span></span>";
-    private static final String TIME_ROW =
-            "<tr><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
-    private static final String MONTHLY_SUBPAGES_ROW =
-            "<tr><td>%d</td><td><a href=\"%s\">%s</a></td></tr>\n";
-    private static final String PORTS_ROW =
-            "<tr><td class=\"left\">%d</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
-    private static final String USERS_ROW =
-            "<tr><td class=\"left\">%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
-    private static final String IP_ROW =
-            "<tr><td class=\"left\">%s</td><td><a href=\"%s\">View</a></td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
-    private static final String USER_AGENTS_ROW =
-            "<tr><td class=\"left\">%s</td><td>%d</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
-    private static final String FILES_ROW =
-            "<tr><td class=\"left\">%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
-    private static final String QUERIES_ROW =
-            "<tr><td class=\"left\">%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
-    private static final String RESPONSES_ROW =
-            "<tr><td>%d</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
-    private static final String TIME_TAKEN_ROW = "<tr><td>%s%s%s</td><td>%d</td><td>%s</td></tr>\n";
 
     public static void main(String[] args) {
         try {
@@ -223,9 +202,9 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String server : counts.keySet()) {
-                sb.append(String.format(USERS_ROW,
+                sb.append(String.format(Templates.USERS_ROW,
                         server.length() > Config.instance.truncateWideColumns ?
-                                String.format(TRUNCATED_CELL, server,
+                                String.format(Templates.TRUNCATED_CELL, server,
                                         server.substring(0, Config.instance.truncateWideColumns)) :
                                 server, counts.get(server),
                         Utils.formatPercent(counts.get(server), entries.size()),
@@ -251,7 +230,7 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(int port : new TreeSet<>(counts.keySet())) {
-                sb.append(String.format(PORTS_ROW, port, counts.get(port),
+                sb.append(String.format(Templates.PORTS_ROW, port, counts.get(port),
                         Utils.formatPercent(counts.get(port), entries.size()),
                         Utils.humanReadableSize(sizes.get(port)),
                         Utils.formatPercent(sizes.get(port), total),
@@ -275,7 +254,7 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String year : new TreeSet<>(counts.keySet())) {
-                sb.append(String.format(TIME_ROW, year,
+                sb.append(String.format(Templates.TIME_ROW, year,
                         unique.containsKey(year) ? unique.get(year).size() : 0, counts.get(year),
                         Utils.formatPercent(counts.get(year), entries.size()),
                         Utils.humanReadableSize(sizes.get(year)),
@@ -303,7 +282,7 @@ public class Main {
             }
             StringBuilder sb = new StringBuilder();
             for(int month = 0; month < 12; month++) {
-                sb.append(String.format(TIME_ROW, Utils.MONTH_NAMES[month],
+                sb.append(String.format(Templates.TIME_ROW, Utils.MONTH_NAMES[month],
                         unique.containsKey(month) ? unique.get(month).size() : 0, counts[month],
                         Utils.formatPercent(counts[month], entries.size()),
                         Utils.humanReadableSize(sizes[month]),
@@ -327,7 +306,7 @@ public class Main {
             for(int year = startYear; year <= endYear; year++) {
                 for(int month = (year == startYear ? startMonth : 0);
                     month <= (year == endYear ? endMonth : 11); month++) {
-                    sb.append(String.format(MONTHLY_SUBPAGES_ROW, year,
+                    sb.append(String.format(Templates.MONTHLY_SUBPAGES_ROW, year,
                             Config.instance.monthSubpagePattern.replace("{{year}}",
                                             String.valueOf(year))
                                     .replace("{{month}}", String.format("%02d", month + 1)),
@@ -354,7 +333,7 @@ public class Main {
             }
             StringBuilder sb = new StringBuilder();
             for(int day = 0; day < 7; day++) {
-                sb.append(String.format(TIME_ROW, Utils.DAY_NAMES[day],
+                sb.append(String.format(Templates.TIME_ROW, Utils.DAY_NAMES[day],
                         unique.containsKey(day) ? unique.get(day).size() : 0, counts[day],
                         Utils.formatPercent(counts[day], entries.size()),
                         Utils.humanReadableSize(sizes[day]),
@@ -381,7 +360,7 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String hour : new TreeSet<>(counts.keySet())) {
-                sb.append(String.format(TIME_ROW, hour,
+                sb.append(String.format(Templates.TIME_ROW, hour,
                         unique.containsKey(hour) ? unique.get(hour).size() : 0, counts.get(hour),
                         Utils.formatPercent(counts.get(hour), entries.size()),
                         Utils.humanReadableSize(sizes.get(hour)),
@@ -411,11 +390,12 @@ public class Main {
             for(String ip : counts.keySet()) {
                 if(counts.get(ip) < Config.instance.ipRequestCountThreshold)
                     continue;
-                sb.append(String.format(IP_ROW, ip.length() > Config.instance.truncateWideColumns ?
-                                String.format(TRUNCATED_CELL, ip,
+                sb.append(String.format(Templates.IP_ROW,
+                        ip.length() > Config.instance.truncateWideColumns ?
+                                String.format(Templates.TRUNCATED_CELL, ip,
                                         ip.substring(0, Config.instance.truncateWideColumns)) :
-                                ip, Config.instance.whoisTool.replace("{{address}}", ip), counts.get(ip),
-                        Utils.formatPercent(counts.get(ip), entries.size()),
+                                ip, Config.instance.whoisTool.replace("{{address}}", ip),
+                        counts.get(ip), Utils.formatPercent(counts.get(ip), entries.size()),
                         Utils.humanReadableSize(sizes.get(ip)),
                         Utils.formatPercent(sizes.get(ip), total),
                         Config.getOutputDateFormat().format(latestVisits.get(ip))));
@@ -439,9 +419,9 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String user : counts.keySet()) {
-                sb.append(String.format(USERS_ROW,
+                sb.append(String.format(Templates.USERS_ROW,
                         user.length() > Config.instance.truncateWideColumns ?
-                                String.format(TRUNCATED_CELL, user,
+                                String.format(Templates.TRUNCATED_CELL, user,
                                         user.substring(0, Config.instance.truncateWideColumns)) :
                                 user, counts.get(user),
                         Utils.formatPercent(counts.get(user), entries.size()),
@@ -473,10 +453,11 @@ public class Main {
             for(String userAgent : counts.keySet()) {
                 if(counts.get(userAgent) < Config.instance.userAgentRequestCountThreshold)
                     continue;
-                sb.append(String.format(USER_AGENTS_ROW,
+                sb.append(String.format(Templates.USER_AGENTS_ROW,
                         userAgent.length() > Config.instance.truncateWideColumns ?
-                                String.format(TRUNCATED_CELL, userAgent, userAgent.substring(0,
-                                        Config.instance.truncateWideColumns)) :
+                                String.format(Templates.TRUNCATED_CELL, userAgent,
+                                        userAgent.substring(0,
+                                                Config.instance.truncateWideColumns)) :
                                 userAgent,
                         unique.containsKey(userAgent) ? unique.get(userAgent).size() : 0,
                         counts.get(userAgent),
@@ -505,10 +486,11 @@ public class Main {
             for(String filename : counts.keySet()) {
                 if(counts.get(filename) < Config.instance.fileRequestCountThreshold)
                     continue;
-                sb.append(String.format(FILES_ROW,
+                sb.append(String.format(Templates.FILES_ROW,
                         filename.length() > Config.instance.truncateWideColumns ?
-                                String.format(TRUNCATED_CELL, filename, filename.substring(0,
-                                        Config.instance.truncateWideColumns)) :
+                                String.format(Templates.TRUNCATED_CELL, filename,
+                                        filename.substring(0,
+                                                Config.instance.truncateWideColumns)) :
                                 filename, counts.get(filename),
                         Utils.formatPercent(counts.get(filename), entries.size()),
                         Utils.humanReadableSize(sizes.get(filename)),
@@ -532,9 +514,9 @@ public class Main {
             for(String query : counts.keySet()) {
                 if(counts.get(query) < Config.instance.queryRequestCountThreshold)
                     continue;
-                sb.append(String.format(QUERIES_ROW,
+                sb.append(String.format(Templates.QUERIES_ROW,
                         query.length() > Config.instance.truncateWideColumns ?
-                                String.format(TRUNCATED_CELL, query,
+                                String.format(Templates.TRUNCATED_CELL, query,
                                         query.substring(0, Config.instance.truncateWideColumns)) :
                                 query, counts.get(query),
                         Utils.formatPercent(counts.get(query), entries.size()),
@@ -557,9 +539,9 @@ public class Main {
             for(String referer : counts.keySet()) {
                 if(counts.get(referer) < Config.instance.refererRequestCountThreshold)
                     continue;
-                sb.append(String.format(QUERIES_ROW,
+                sb.append(String.format(Templates.QUERIES_ROW,
                         referer.length() > Config.instance.truncateWideColumns ?
-                                String.format(TRUNCATED_CELL, referer,
+                                String.format(Templates.TRUNCATED_CELL, referer,
                                         referer.substring(0, Config.instance.truncateWideColumns)) :
                                 referer, counts.get(referer),
                         Utils.formatPercent(counts.get(referer), entries.size()),
@@ -581,7 +563,7 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(int response : counts.keySet()) {
-                sb.append(String.format(RESPONSES_ROW, response, counts.get(response),
+                sb.append(String.format(Templates.RESPONSES_ROW, response, counts.get(response),
                         Utils.formatPercent(counts.get(response), entries.size()),
                         Utils.humanReadableSize(sizes.get(response)),
                         Utils.formatPercent(sizes.get(response), total)));
@@ -607,18 +589,19 @@ public class Main {
                 }
             }
             StringBuilder sb = new StringBuilder();
-            sb.append(
-                    String.format(TIME_TAKEN_ROW, "", "&lt; ", Config.instance.timeTakenBuckets[0],
-                            buckets[0], Utils.formatPercent(buckets[0], entries.size())));
+            sb.append(String.format(Templates.TIME_TAKEN_ROW, "", "&lt; ",
+                    Config.instance.timeTakenBuckets[0], buckets[0],
+                    Utils.formatPercent(buckets[0], entries.size())));
             for(int i = 1; i < buckets.length; i++) {
                 long size = buckets[i];
                 if(i == Config.instance.timeTakenBuckets.length) {
-                    sb.append(String.format(TIME_TAKEN_ROW, "", "&geq; ",
+                    sb.append(String.format(Templates.TIME_TAKEN_ROW, "", "&geq; ",
                             Config.instance.timeTakenBuckets[i - 1], size,
                             Utils.formatPercent(size, entries.size())));
                 } else {
-                    sb.append(String.format(TIME_TAKEN_ROW, Config.instance.timeTakenBuckets[i - 1],
-                            "-", (Config.instance.timeTakenBuckets[i] - 1), size,
+                    sb.append(String.format(Templates.TIME_TAKEN_ROW,
+                            Config.instance.timeTakenBuckets[i - 1], "-",
+                            (Config.instance.timeTakenBuckets[i] - 1), size,
                             Utils.formatPercent(size, entries.size())));
                 }
             }

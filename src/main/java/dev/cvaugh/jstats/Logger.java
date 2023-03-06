@@ -3,7 +3,7 @@ package dev.cvaugh.jstats;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-public class Logger {
+public final class Logger {
     public static final int DEBUG = 0;
     public static final int INFO = 1;
     public static final int WARN = 2;

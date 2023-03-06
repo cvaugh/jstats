@@ -23,7 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-public class Utils {
+public final class Utils {
     public static final Gson GSON = new Gson();
     public static final String[] DAY_NAMES =
             new String[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
