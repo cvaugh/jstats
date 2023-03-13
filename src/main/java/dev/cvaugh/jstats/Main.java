@@ -112,7 +112,7 @@ public class Main {
                         .toList();
         String template = "";
         try {
-            template = Utils.readTemplate("main");
+            template = Templates.read("main");
         } catch(IOException e) {
             Logger.log("Failed to read template: main", Logger.ERROR);
             Logger.log(e, Logger.ERROR);
@@ -154,7 +154,7 @@ public class Main {
 
     public static String generateOutputSection(OutputSection section, List<LogEntry> entries,
             boolean includeSubpages) throws IOException {
-        String template = Utils.readTemplate(section);
+        String template = Templates.read(section);
         // TODO consolidate similar sections
         switch(section) {
         case GENERATED_DATE -> {

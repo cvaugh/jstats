@@ -111,22 +111,6 @@ public final class Utils {
         return "^" + logFormat + "$";
     }
 
-    public static String readTemplate(String name) throws IOException {
-        InputStream in = Utils.class.getResourceAsStream("/templates/" + name + ".html");
-        if(in == null) {
-            return "";
-        }
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-        String template = String.join("\n", reader.lines().toList());
-        reader.close();
-        in.close();
-        return template;
-    }
-
-    public static String readTemplate(OutputSection section) throws IOException {
-        return readTemplate(section.name().toLowerCase());
-    }
-
     public static String humanReadableSize(long bytes) {
         double b = (double) bytes;
         int magnitude = 0;

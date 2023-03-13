@@ -1,5 +1,10 @@
 package dev.cvaugh.jstats;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 public final class Templates {
     public static final String TRUNCATED_CELL =
             "<span class=\"truncated\" title=\"%s\">%s<span class=\"truncation-marker\">&raquo;</span></span>";
@@ -22,4 +27,20 @@ public final class Templates {
     public static final String RESPONSES_ROW =
             "<tr><td>%d</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n";
     public static final String TIME_TAKEN_ROW = "<tr><td>%s%s%s</td><td>%d</td><td>%s</td></tr>\n";
+
+    public static String read(String name) throws IOException {
+        InputStream in = Utils.class.getResourceAsStream("/templates/" + name + ".html");
+        if(in == null) {
+            return "";
+        }
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+        String template = String.join("\n", reader.lines().toList());
+        reader.close();
+        in.close();
+        return template;
+    }
+
+    public static String read(OutputSection section) throws IOException {
+        return read(section.name().toLowerCase());
+    }
 }
