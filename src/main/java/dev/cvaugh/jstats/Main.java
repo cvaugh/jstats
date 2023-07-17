@@ -65,6 +65,11 @@ public class Main {
         Logger.log("Writing %s to %s", Logger.INFO,
                 Utils.humanReadableSize(template.getBytes(StandardCharsets.UTF_8).length),
                 Config.getOutputFile().getAbsolutePath());
+        if(!Config.getOutputDir().exists() && !Config.getOutputDir().mkdirs()) {
+            Logger.log("Failed to create output directory at %s", Logger.ERROR,
+                    Config.getOutputDir().getAbsolutePath());
+            System.exit(1);
+        }
         try {
             Files.writeString(Config.getOutputFile().toPath(), template);
         } catch(IOException e) {
@@ -73,11 +78,6 @@ public class Main {
             Logger.log(e, Logger.ERROR);
         }
         if(Config.instance.outputMonthSubpages) {
-            if(!Config.getOutputDir().exists() && !Config.getOutputDir().mkdirs()) {
-                Logger.log("Failed to create month subpage directory at %s", Logger.ERROR,
-                        Config.getOutputDir().getAbsolutePath());
-                System.exit(1);
-            }
             long start = entries.get(0).time;
             long end = entries.get(entries.size() - 1).time;
             int startYear = Integer.parseInt(Utils.YEAR_FORMAT.format(start));

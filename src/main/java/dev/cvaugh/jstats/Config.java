@@ -24,8 +24,8 @@ public class Config {
     public boolean readRotatedLogs = true;
     public String logFormat =
             "%v:%p %h %l %u %t \"%r\" %s:%>s %I %O \"%{Referer}i\" \"%{User-Agent}i\" %D %k %f \"%U\" \"%q\"";
-    public String outputDirectory = "~";
-    public String outputFileName = "jstats.html";
+    public String outputDirectory = "~/jstats";
+    public String outputFileName = "index.html";
     public boolean outputMonthSubpages = true;
     public String monthSubpagePattern = "{{year}}-{{month}}.html";
     public String inputDateFormat = "dd/MMM/yyyy:HH:mm:ss Z";
