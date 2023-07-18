@@ -87,14 +87,12 @@ public class LogEntry implements Comparable<LogEntry> {
             case URL -> url = v;
             case SERVER_NAME -> serverName = v;
             case SERVER_NAME_UCN -> serverNameUCN = v;
-            case CONNECTION_STATUS -> {
-                switch(v.charAt(0)) {
-                case 'X' -> connectionStatus = ConnectionStatus.ABORTED;
-                case '+' -> connectionStatus = ConnectionStatus.KEPT_ALIVE;
-                case '-' -> connectionStatus = ConnectionStatus.CLOSED;
-                default -> connectionStatus = ConnectionStatus.UNSET;
-                }
-            }
+            case CONNECTION_STATUS -> connectionStatus = switch(v.charAt(0)) {
+                case 'X' -> ConnectionStatus.ABORTED;
+                case '+' -> ConnectionStatus.KEPT_ALIVE;
+                case '-' -> ConnectionStatus.CLOSED;
+                default -> ConnectionStatus.UNSET;
+            };
             case BYTES_RECEIVED -> bytesReceived = Long.parseLong(v);
             case BYTES_SENT -> bytesSent = Long.parseLong(v);
             case BYTES_TRANSFERRED -> bytesTransferred = Long.parseLong(v);
