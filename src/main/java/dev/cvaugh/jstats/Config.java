@@ -25,7 +25,6 @@ public class Config {
     public String logFormat =
             "%v:%p %h %l %u %t \"%r\" %s:%>s %I %O \"%{Referer}i\" \"%{User-Agent}i\" %D %k %f \"%U\" \"%q\"";
     public String outputDirectory = "~/jstats";
-    public String outputFileName = "index.html";
     public boolean outputMonthSubpages = true;
     public String monthSubpagePattern = "{{year}}-{{month}}.html";
     public String inputDateFormat = "dd/MMM/yyyy:HH:mm:ss Z";
@@ -93,10 +92,6 @@ public class Config {
 
     public static File getOutputDir() {
         return new File(Utils.replaceTildeInPath(instance.outputDirectory));
-    }
-
-    public static File getOutputFile() {
-        return new File(getOutputDir(), instance.outputFileName);
     }
 
     public static File getMonthlySubpageFile(int year, int month) {

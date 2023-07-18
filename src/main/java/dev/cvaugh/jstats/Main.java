@@ -62,19 +62,19 @@ public class Main {
         }
         Collections.sort(entries);
         String template = generateStatistics(entries, 0, 0);
+        File indexFile = new File(Config.getOutputDir(), "index.html");
         Logger.log("Writing %s to %s", Logger.INFO,
                 Utils.humanReadableSize(template.getBytes(StandardCharsets.UTF_8).length),
-                Config.getOutputFile().getAbsolutePath());
+                indexFile.getAbsolutePath());
         if(!Config.getOutputDir().exists() && !Config.getOutputDir().mkdirs()) {
             Logger.log("Failed to create output directory at %s", Logger.ERROR,
                     Config.getOutputDir().getAbsolutePath());
             System.exit(1);
         }
         try {
-            Files.writeString(Config.getOutputFile().toPath(), template);
+            Files.writeString(indexFile.toPath(), template);
         } catch(IOException e) {
-            Logger.log("Failed to write output to %s", Logger.ERROR,
-                    Config.getOutputFile().getAbsolutePath());
+            Logger.log("Failed to write output to %s", Logger.ERROR, indexFile.getAbsolutePath());
             Logger.log(e, Logger.ERROR);
         }
         if(Config.instance.outputMonthSubpages) {
