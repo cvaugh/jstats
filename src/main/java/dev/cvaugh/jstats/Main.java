@@ -32,8 +32,7 @@ public class Main {
         String logRegex = "^" + quotedName + "\\.[0-9]+$";
         String gzipRegex = "^" + quotedName + "\\.[0-9]+\\.gz$";
         File[] files = Config.getAccessLogDirectory().listFiles(file -> {
-            if(file.getName().equals(Config.instance.accessLogName))
-                return true;
+            if(file.getName().equals(Config.instance.accessLogName)) return true;
             if(Config.instance.readRotatedLogs) {
                 return file.getName().matches(logRegex) || file.getName().matches(gzipRegex);
             }
@@ -77,6 +76,13 @@ public class Main {
             Logger.log("Failed to write output to %s", Logger.ERROR, indexFile.getAbsolutePath());
             Logger.log(e, Logger.ERROR);
         }
+        File cssFile = new File(Config.getOutputDir(), "styles.css");
+        try {
+            Files.writeString(cssFile.toPath(), Templates.read("styles.css"));
+        } catch(IOException e) {
+            Logger.log("Failed to write stylesheet to %s", Logger.ERROR, cssFile.getAbsolutePath());
+            Logger.log(e, Logger.ERROR);
+        }
         if(Config.instance.outputMonthSubpages) {
             long start = entries.get(0).time;
             long end = entries.get(entries.size() - 1).time;
@@ -112,7 +118,7 @@ public class Main {
                         .toList();
         String template = "";
         try {
-            template = Templates.read("main");
+            template = Templates.read("main.html");
         } catch(IOException e) {
             Logger.log("Failed to read template: main", Logger.ERROR);
             Logger.log(e, Logger.ERROR);
@@ -294,8 +300,7 @@ public class Main {
                     .replace("{{avg_bandwidth}}", Utils.humanReadableSize(totalBandwidth / 12));
         }
         case MONTH_SUBPAGES -> {
-            if(!includeSubpages)
-                return "";
+            if(!includeSubpages) return "";
             long start = entries.get(0).time;
             long end = entries.get(entries.size() - 1).time;
             int startYear = Integer.parseInt(Utils.YEAR_FORMAT.format(start));
@@ -388,8 +393,7 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String ip : counts.keySet()) {
-                if(counts.get(ip) < Config.instance.ipRequestCountThreshold)
-                    continue;
+                if(counts.get(ip) < Config.instance.ipRequestCountThreshold) continue;
                 sb.append(String.format(Templates.IP_ROW,
                         ip.length() > Config.instance.truncateWideColumns ?
                                 String.format(Templates.TRUNCATED_CELL, ip,
@@ -451,8 +455,7 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String userAgent : counts.keySet()) {
-                if(counts.get(userAgent) < Config.instance.userAgentRequestCountThreshold)
-                    continue;
+                if(counts.get(userAgent) < Config.instance.userAgentRequestCountThreshold) continue;
                 sb.append(String.format(Templates.USER_AGENTS_ROW,
                         userAgent.length() > Config.instance.truncateWideColumns ?
                                 String.format(Templates.TRUNCATED_CELL, userAgent,
@@ -484,8 +487,7 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String filename : counts.keySet()) {
-                if(counts.get(filename) < Config.instance.fileRequestCountThreshold)
-                    continue;
+                if(counts.get(filename) < Config.instance.fileRequestCountThreshold) continue;
                 sb.append(String.format(Templates.FILES_ROW,
                         filename.length() > Config.instance.truncateWideColumns ?
                                 String.format(Templates.TRUNCATED_CELL, filename,
@@ -512,8 +514,7 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String query : counts.keySet()) {
-                if(counts.get(query) < Config.instance.queryRequestCountThreshold)
-                    continue;
+                if(counts.get(query) < Config.instance.queryRequestCountThreshold) continue;
                 sb.append(String.format(Templates.QUERIES_ROW,
                         query.length() > Config.instance.truncateWideColumns ?
                                 String.format(Templates.TRUNCATED_CELL, query,
@@ -537,8 +538,7 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String referer : counts.keySet()) {
-                if(counts.get(referer) < Config.instance.refererRequestCountThreshold)
-                    continue;
+                if(counts.get(referer) < Config.instance.refererRequestCountThreshold) continue;
                 sb.append(String.format(Templates.QUERIES_ROW,
                         referer.length() > Config.instance.truncateWideColumns ?
                                 String.format(Templates.TRUNCATED_CELL, referer,

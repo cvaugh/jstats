@@ -1,9 +1,11 @@
 package dev.cvaugh.jstats;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 
 public final class Templates {
     public static final String TRUNCATED_CELL =
@@ -29,10 +31,11 @@ public final class Templates {
     public static final String TIME_TAKEN_ROW = "<tr><td>%s%s%s</td><td>%d</td><td>%s</td></tr>\n";
 
     public static String read(String name) throws IOException {
-        InputStream in = Utils.class.getResourceAsStream("/templates/" + name + ".html");
-        if(in == null) {
-            return "";
-        }
+        File file = new File(Config.TEMPLATE_DIR, name);
+        if(Config.TEMPLATE_DIR.exists() && Config.TEMPLATE_DIR.isDirectory() && file.exists())
+            return Files.readString(file.toPath());
+        InputStream in = Utils.class.getResourceAsStream("/templates/" + name);
+        if(in == null) return "";
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         String template = String.join("\n", reader.lines().toList());
         reader.close();
@@ -41,6 +44,6 @@ public final class Templates {
     }
 
     public static String read(OutputSection section) throws IOException {
-        return read(section.name().toLowerCase());
+        return read(section.name().toLowerCase() + ".html");
     }
 }

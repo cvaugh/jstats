@@ -1,0 +1,151 @@
+body {
+  font-family: sans-serif;
+  font-size: 9pt;
+  color: #000;
+  background-color: #FAFAFA;
+  margin: 1rem 2rem;
+}
+  
+a {
+  color: #06C;
+}
+
+a:active {
+  color: #004080;
+}
+
+a:visited {
+  color: #7027A0;
+}
+
+h1 {
+  font-size: 26pt;
+  margin-bottom: 0;
+}
+
+h2 {
+  font-size: 20pt;
+}
+
+h3 {
+  font-size: 14pt;
+}
+
+h4 {
+  font-size: 12pt;
+  font-family: monospace;
+  font-weight: normal;
+  color: #555;
+  margin: 0;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+}
+
+th {
+  font-weight: normal;
+  background-color: #DADADA;
+}
+
+th, td {
+  text-align: center;
+  margin: 2px;
+  padding: 0.05em 0.5em;
+  font-family: monospace;
+}
+
+th.visitors {
+  background-color: #EF9A9A;
+}
+
+th.visits {
+  background-color: #A5D6A7;
+}
+
+th.bandwidth {
+  background-color: #90CAF9;
+}
+
+tr:nth-child(odd) td {
+  background-color: #EAEAEA;
+}
+
+td.left {
+  text-align: left;
+}
+
+.jstats-footer {
+  font-size: 8pt;
+  font-family: monospace;
+}
+
+.truncated {
+  text-decoration: underline dotted #424242;
+}
+
+.truncation-marker {
+  color: #B71C1C;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1E1E1E;
+    color: #FFF;
+  }
+  
+  a {
+    color: #3EA6FF;
+  }
+  
+  a:active {
+    color: #86C6F4;
+  }
+  
+  a:visited {
+    color: #488FB1;
+  }
+
+  h4 {
+    color: #9B9B9B;
+  }
+  
+  table {
+    border-spacing: 1px;
+  }
+
+  th {
+    background-color: #333;
+    border: 1px solid #404040;
+  }
+
+  th.visitors {
+    background-color: #C72C41;
+  }
+
+  th.visits {
+    background-color: #3E7C17;
+  }
+
+  th.bandwidth {
+    background-color: #28518A;
+  }
+  
+  tr td {
+    background-color: #1E1E1E;
+    border: 1px solid #333;
+  }
+
+  tr:nth-child(odd) td {
+    background-color: #292929;
+  }
+
+  .truncated {
+    text-decoration: underline dotted #AAA;
+  }
+
+  .truncation-marker {
+    color: #C74B50;
+  }
+}

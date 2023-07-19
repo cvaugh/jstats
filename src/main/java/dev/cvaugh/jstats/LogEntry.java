@@ -47,8 +47,7 @@ public class LogEntry implements Comparable<LogEntry> {
     public void process() {
         for(LogElement e : LogElement.values()) {
             String v = elements.get(e);
-            if(v == null)
-                continue;
+            if(v == null) continue;
             switch(e) {
             case CLIENT_IP -> clientIP = v;
             case UNDERLYING_PEER_IP -> underlyingPeerIP = v;

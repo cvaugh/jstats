@@ -1,20 +1,26 @@
 <h3>Days of Week</h3>
 <table>
-  <tr>
-    <th>Day</th>
-    <th class="visitors">Unique Visitors</th>
-    <th class="visits">Visits</th>
-    <th class="visits">Visit %</th>
-    <th class="bandwidth">Bandwidth</th>
-    <th class="bandwidth">Bandwidth %</th>
-  </tr>
+  <thead>
+    <tr>
+      <th>Day</th>
+      <th class="visitors">Unique Visitors</th>
+      <th class="visits">Visits</th>
+      <th class="visits">Visit %</th>
+      <th class="bandwidth">Bandwidth</th>
+      <th class="bandwidth">Bandwidth %</th>
+    </tr>
+  </thead>
+  <tbody>
 {{rows}}
-  <tr>
-    <th>Average</th>
-    <th>{{avg_visitors}}</th>
-    <th>{{avg_visits}}</th>
-    <th></th>
-    <th>{{avg_bandwidth}}</th>
-    <th></th>
-  </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <th>Average</th>
+      <th>{{avg_visitors}}</th>
+      <th>{{avg_visits}}</th>
+      <th></th>
+      <th>{{avg_bandwidth}}</th>
+      <th></th>
+    </tr>
+  </tfoot>
 </table>

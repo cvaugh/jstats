@@ -15,8 +15,7 @@ public final class Logger {
     }
 
     public static void log(String s, int level) {
-        if(level == NONE || level < Config.instance.logVerbosity)
-            return;
+        if(level == NONE || level < Config.instance.logVerbosity) return;
         switch(level) {
         case DEBUG -> log(s, "DEBUG", System.out);
         case INFO -> log(s, "INFO", System.out);
@@ -27,8 +26,7 @@ public final class Logger {
     }
 
     public static void log(String s, int level, Object... format) {
-        if(level == NONE || level < Config.instance.logVerbosity)
-            return;
+        if(level == NONE || level < Config.instance.logVerbosity) return;
         log(String.format(s, format), level);
     }
 

@@ -1,13 +1,15 @@
 <h3>{{title}}</h3>
 <table>
-  <tr>
-    <th>{{key}}</th>
-    <th class="visits">Visits</th>
-    <th class="visits">Visit Percentage</th>
-    <th class="bandwidth">Bandwidth</th>
-    <th class="bandwidth">Bandwidth Percentage</th>
-  </tr>
-  <tr>
+  <thead>
+    <tr>
+      <th>{{key}}</th>
+      <th class="visits">Visits</th>
+      <th class="visits">Visit Percentage</th>
+      <th class="bandwidth">Bandwidth</th>
+      <th class="bandwidth">Bandwidth Percentage</th>
+    </tr>
+  </thead>
+  <tbody>
 {{rows}}
-  </tr>
+  </tbody>
 </table>

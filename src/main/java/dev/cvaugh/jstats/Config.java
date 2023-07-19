@@ -14,6 +14,7 @@ public class Config {
     private static final File CONFIG_DIR = new File(
             Utils.replaceTildeInPath("~" + File.separator + ".config" + File.separator + "jstats"));
     public static final File FILE = new File(CONFIG_DIR, "config.json");
+    public static final File TEMPLATE_DIR = new File(CONFIG_DIR, "templates");
     private static final Gson PRETTY_GSON = new GsonBuilder().setPrettyPrinting().create();
     public static Config instance = new Config();
     private static DateFormat inputDF;
@@ -49,7 +50,7 @@ public class Config {
                             CONFIG_DIR.getAbsolutePath());
                     System.exit(1);
                 }
-            } catch(Exception e) {
+            } catch(SecurityException e) {
                 Logger.log("Failed to create config directory at %s", Logger.ERROR,
                         CONFIG_DIR.getAbsolutePath());
                 Logger.log(e, Logger.ERROR);
@@ -74,8 +75,7 @@ public class Config {
         }
         inputDF = new SimpleDateFormat(instance.inputDateFormat);
         outputDF = new SimpleDateFormat(instance.outputDateFormat);
-        if(instance.truncateWideColumns == 0)
-            instance.truncateWideColumns = Integer.MAX_VALUE;
+        if(instance.truncateWideColumns == 0) instance.truncateWideColumns = Integer.MAX_VALUE;
     }
 
     public void write() throws IOException {
