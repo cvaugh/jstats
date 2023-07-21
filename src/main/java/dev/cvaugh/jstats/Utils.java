@@ -5,6 +5,8 @@ import com.google.gson.Gson;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -44,7 +46,7 @@ public final class Utils {
         Logger.log("Reading log file: %s", Logger.DEBUG, file.getAbsolutePath());
         List<String> lines;
         try {
-            if(file.getName().endsWith(".gz")) {
+            if(isGZIP(file)) {
                 lines = new ArrayList<>();
                 InputStream fis = new FileInputStream(file);
                 InputStream gis = new GZIPInputStream(fis);
@@ -65,6 +67,13 @@ public final class Utils {
             return new ArrayList<>();
         }
         return Utils.parseLog(lines);
+    }
+
+    public static boolean isGZIP(File file) throws IOException {
+        InputStream is = new FileInputStream(file);
+        int magic = is.read() & 0xFF | ((is.read() << 8 & 0xFF00));
+        is.close();
+        return magic == GZIPInputStream.GZIP_MAGIC;
     }
 
     public static List<LogEntry> parseLog(List<String> lines) {
@@ -141,5 +150,10 @@ public final class Utils {
         }
 
         return result;
+    }
+
+    public static String escape(String s) {
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                .replace("\"", "&quot;").replace("'", "&#39;");
     }
 }

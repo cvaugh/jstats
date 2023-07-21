@@ -91,10 +91,19 @@ public class Main {
             int startMonth = Integer.parseInt(Utils.MONTH_FORMAT.format(start)) - 1;
             int endMonth = Integer.parseInt(Utils.MONTH_FORMAT.format(end)) - 1;
             for(int year = startYear; year <= endYear; year++) {
+                final int finalYear = year;
                 for(int month = (year == startYear ? startMonth : 0);
                     month <= (year == endYear ? endMonth : 11); month++) {
-                    File subpage = Config.getMonthlySubpageFile(year, month + 1);
-                    template = generateStatistics(entries, year, month + 1);
+                    final int finalMonth = month + 1;
+                    if(entries.stream().filter(e ->
+                            Integer.parseInt(Utils.YEAR_FORMAT.format(e.time)) == finalYear &&
+                                    Integer.parseInt(Utils.MONTH_FORMAT.format(e.time)) ==
+                                            finalMonth).toList().size() == 0) {
+                        Logger.log("Skipping month %d-%02d", Logger.INFO, year, finalMonth);
+                        continue;
+                    }
+                    File subpage = Config.getMonthlySubpageFile(year, finalMonth);
+                    template = generateStatistics(entries, year, finalMonth);
                     Logger.log("Writing %s to %s", Logger.INFO, Utils.humanReadableSize(
                                     template.getBytes(StandardCharsets.UTF_8).length),
                             subpage.getAbsolutePath());
@@ -161,7 +170,6 @@ public class Main {
     public static String generateOutputSection(OutputSection section, List<LogEntry> entries,
             boolean includeSubpages) throws IOException {
         String template = Templates.read(section);
-        // TODO consolidate similar sections
         switch(section) {
         case GENERATED_DATE -> {
             return Config.getOutputDateFormat().format(System.currentTimeMillis());
@@ -208,6 +216,7 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String server : counts.keySet()) {
+                server = Utils.escape(server);
                 sb.append(String.format(Templates.USERS_ROW,
                         server.length() > Config.instance.truncateWideColumns ?
                                 String.format(Templates.TRUNCATED_CELL, server,
@@ -309,13 +318,23 @@ public class Main {
             int endMonth = Integer.parseInt(Utils.MONTH_FORMAT.format(end)) - 1;
             StringBuilder sb = new StringBuilder();
             for(int year = startYear; year <= endYear; year++) {
+                final int finalYear = year;
                 for(int month = (year == startYear ? startMonth : 0);
                     month <= (year == endYear ? endMonth : 11); month++) {
-                    sb.append(String.format(Templates.MONTHLY_SUBPAGES_ROW, year,
-                            Config.instance.monthSubpagePattern.replace("{{year}}",
-                                            String.valueOf(year))
-                                    .replace("{{month}}", String.format("%02d", month + 1)),
-                            Utils.MONTH_NAMES_FULL[month]));
+                    final int finalMonth = month + 1;
+                    if(entries.stream().filter(e ->
+                            Integer.parseInt(Utils.YEAR_FORMAT.format(e.time)) == finalYear &&
+                                    Integer.parseInt(Utils.MONTH_FORMAT.format(e.time)) ==
+                                            finalMonth).toList().size() == 0) {
+                        sb.append(String.format(Templates.MONTHLY_SUBPAGES_ROW_MISSING, year,
+                                Utils.MONTH_NAMES_FULL[month]));
+                    } else {
+                        sb.append(String.format(Templates.MONTHLY_SUBPAGES_ROW, year,
+                                Config.instance.monthSubpagePattern.replace("{{year}}",
+                                                String.valueOf(year))
+                                        .replace("{{month}}", String.format("%02d", month + 1)),
+                                Utils.MONTH_NAMES_FULL[month]));
+                    }
                 }
                 if(year != endYear) {
                     sb.append("<tr></tr><tr></tr>");
@@ -423,11 +442,12 @@ public class Main {
             counts = Utils.sortByValue(counts);
             StringBuilder sb = new StringBuilder();
             for(String user : counts.keySet()) {
+                String escaped = Utils.escape(user);
                 sb.append(String.format(Templates.USERS_ROW,
                         user.length() > Config.instance.truncateWideColumns ?
-                                String.format(Templates.TRUNCATED_CELL, user,
-                                        user.substring(0, Config.instance.truncateWideColumns)) :
-                                user, counts.get(user),
+                                String.format(Templates.TRUNCATED_CELL, escaped, Utils.escape(
+                                        user.substring(0, Config.instance.truncateWideColumns))) :
+                                escaped, counts.get(user),
                         Utils.formatPercent(counts.get(user), entries.size()),
                         Utils.humanReadableSize(sizes.get(user)),
                         Utils.formatPercent(sizes.get(user), total),
@@ -456,12 +476,13 @@ public class Main {
             StringBuilder sb = new StringBuilder();
             for(String userAgent : counts.keySet()) {
                 if(counts.get(userAgent) < Config.instance.userAgentRequestCountThreshold) continue;
+                String escaped = Utils.escape(userAgent);
                 sb.append(String.format(Templates.USER_AGENTS_ROW,
                         userAgent.length() > Config.instance.truncateWideColumns ?
-                                String.format(Templates.TRUNCATED_CELL, userAgent,
+                                String.format(Templates.TRUNCATED_CELL, escaped, Utils.escape(
                                         userAgent.substring(0,
-                                                Config.instance.truncateWideColumns)) :
-                                userAgent,
+                                                Config.instance.truncateWideColumns))) :
+                                escaped,
                         unique.containsKey(userAgent) ? unique.get(userAgent).size() : 0,
                         counts.get(userAgent),
                         Utils.formatPercent(counts.get(userAgent), entries.size()),
@@ -488,12 +509,13 @@ public class Main {
             StringBuilder sb = new StringBuilder();
             for(String filename : counts.keySet()) {
                 if(counts.get(filename) < Config.instance.fileRequestCountThreshold) continue;
+                String escaped = Utils.escape(filename);
                 sb.append(String.format(Templates.FILES_ROW,
                         filename.length() > Config.instance.truncateWideColumns ?
-                                String.format(Templates.TRUNCATED_CELL, filename,
+                                String.format(Templates.TRUNCATED_CELL, escaped, Utils.escape(
                                         filename.substring(0,
-                                                Config.instance.truncateWideColumns)) :
-                                filename, counts.get(filename),
+                                                Config.instance.truncateWideColumns))) :
+                                escaped, counts.get(filename),
                         Utils.formatPercent(counts.get(filename), entries.size()),
                         Utils.humanReadableSize(sizes.get(filename)),
                         Utils.formatPercent(sizes.get(filename), total),
@@ -515,11 +537,12 @@ public class Main {
             StringBuilder sb = new StringBuilder();
             for(String query : counts.keySet()) {
                 if(counts.get(query) < Config.instance.queryRequestCountThreshold) continue;
+                String escaped = Utils.escape(query);
                 sb.append(String.format(Templates.QUERIES_ROW,
                         query.length() > Config.instance.truncateWideColumns ?
-                                String.format(Templates.TRUNCATED_CELL, query,
-                                        query.substring(0, Config.instance.truncateWideColumns)) :
-                                query, counts.get(query),
+                                String.format(Templates.TRUNCATED_CELL, escaped, Utils.escape(
+                                        query.substring(0, Config.instance.truncateWideColumns))) :
+                                escaped, counts.get(query),
                         Utils.formatPercent(counts.get(query), entries.size()),
                         Utils.humanReadableSize(sizes.get(query)),
                         Utils.formatPercent(sizes.get(query), total)));
@@ -539,11 +562,13 @@ public class Main {
             StringBuilder sb = new StringBuilder();
             for(String referer : counts.keySet()) {
                 if(counts.get(referer) < Config.instance.refererRequestCountThreshold) continue;
+                String escaped = Utils.escape(referer);
                 sb.append(String.format(Templates.QUERIES_ROW,
                         referer.length() > Config.instance.truncateWideColumns ?
-                                String.format(Templates.TRUNCATED_CELL, referer,
-                                        referer.substring(0, Config.instance.truncateWideColumns)) :
-                                referer, counts.get(referer),
+                                String.format(Templates.TRUNCATED_CELL, escaped, Utils.escape(
+                                        referer.substring(0,
+                                                Config.instance.truncateWideColumns))) :
+                                escaped, counts.get(referer),
                         Utils.formatPercent(counts.get(referer), entries.size()),
                         Utils.humanReadableSize(sizes.get(referer)),
                         Utils.formatPercent(sizes.get(referer), total)));
