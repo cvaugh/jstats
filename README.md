@@ -1,6 +1,6 @@
 # jStats
 
-A tool for generating easy-to-read summaries of your Apache web server logs.
+jStats generates easy-to-read, table-based summaries and statistics of your Apache web server's access logs.
 
 ## Configuration
 
